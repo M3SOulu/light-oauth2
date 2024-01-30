@@ -144,7 +144,7 @@ class OAuthServiceRegistration(HttpUser):
 
         @task(1)
         @tag('errror','update','404')
-        def update_client_404(self):
+        def update_service_404(self):
             try:
                 c = SERVICES.pop()
             except KeyError: #logging.info("No services available to update")
@@ -202,4 +202,20 @@ class OAuthServiceRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
-
+            
+    @task(1)
+    class GetService(TaskSet):
+        @task(1)
+        @tag('correct', 'get', '200')
+        def get_service_200(self):
+            try:
+                c = SERVICES.pop()
+            except KeyError:
+                raise RescheduleTask()
+            r = self.client.get(f"/oauth2/service/{c.serviceId}", verify=False, allow_redirects=False)
+            if r.status_code == 200:
+                logging.info(f"Got service: serviceName = {c.serviceName}, serviceId = {c.serviceId}")
+            else:
+                logging.info(f'Service get did not return code 200. Instead: {r.status_code}')
+            SERVICES.add(c)
+            self.interrupt()
