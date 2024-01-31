@@ -225,7 +225,7 @@ class OAuthServiceRegistration(HttpUser):
         def get_service_404(self):
             with self.client.get(f"/oauth2/service/none", verify=False, allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.info("Tried to get service with bad id, status 404 as expected.")
+                    logging.info("Tried to get the service with bad id, status 404 as expected.")
                     r.success()
                 else:
                     failure_str = str(f'Get service with bad id got unexpected status code {r.status_code}')
