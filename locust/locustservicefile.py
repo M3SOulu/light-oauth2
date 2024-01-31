@@ -121,7 +121,7 @@ class OAuthServiceRegistration(HttpUser):
                 raise RescheduleTask()
             updated_data = {
                 "serviceId": c.serviceId,
-                "serviceType": "openapi",
+                "serviceType": "swagger",
                 "serviceProfile": "mobile",
                 "serviceName": str(uuid4())[:32],
                 "serviceDesc": str(uuid4()),
