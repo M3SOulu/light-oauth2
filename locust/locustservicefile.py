@@ -219,3 +219,16 @@ class OAuthServiceRegistration(HttpUser):
                 logging.info(f'Service get did not return code 200. Instead: {r.status_code}')
             SERVICES.add(c)
             self.interrupt()
+
+        @task(1)
+        @tag('error', 'get', '404')
+        def get_service_404(self):
+            with self.client.get(f"/oauth2/service/none", verify=False, allow_redirects=False, catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info("Tried to get service with bad id, status 404 as expected.")
+                    r.success()
+                else:
+                    failure_str = str(f'Get service with bad id got unexpected status code {r.status_code}')
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
