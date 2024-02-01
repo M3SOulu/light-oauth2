@@ -122,7 +122,6 @@ class OAuthServiceRegistration(HttpUser):
             updated_data = {
                 "serviceId": c.serviceId,
                 "serviceType": "swagger",
-                "serviceProfile": "mobile",
                 "serviceName": str(uuid4())[:32],
                 "serviceDesc": str(uuid4()),
                 "scope": "read write",
@@ -153,7 +152,6 @@ class OAuthServiceRegistration(HttpUser):
             updated_data = {
                 "serviceId" : "",
                 "serviceType" : "swagger",
-                "serviceProfile": "mobile",
                 "serviceName": str(uuid4())[:32],
                 "serviceDesc": str(uuid4()),
                 "scope": "read write",
