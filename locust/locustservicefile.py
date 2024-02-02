@@ -230,3 +230,15 @@ class OAuthServiceRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
+            
+    @task(1)
+    class GetServicePage(TaskSet):
+        @task(1)
+        @tag('correct', 'get', '200')
+        def get_service_page_200(self):
+            r = self.client.get(f"/oauth2/service", params={'page': '1'}, verify=False, allow_redirects=False)
+            if r.status_code == 200:
+                logging.info(f"Got service page with status_code 200.")
+            else:
+                logging.info(f'service page get did not return code 200. Instead: {r.status_code}')
+            self.interrupt()
