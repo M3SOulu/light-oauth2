@@ -242,3 +242,16 @@ class OAuthServiceRegistration(HttpUser):
             else:
                 logging.info(f'service page get did not return code 200. Instead: {r.status_code}')
             self.interrupt()
+
+        @task(1)
+        @tag('error', 'get', '400')
+        def get_service_page_400(self):
+            with self.client.get("/oauth2/service", params={}, verify=False, allow_redirects=False, catch_response=True) as r:
+                if r.status_code == 400:
+                    logging.info("Called service page without page, status 400 as expected.")
+                    r.success()
+                else:
+                    failure_str = "service page get did not return code 400. Instead: " + str(r.status_code)
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
