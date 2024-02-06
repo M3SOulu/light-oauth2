@@ -255,3 +255,24 @@ class OAuthServiceRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
+
+    @task(1) 
+    class EndpointService(TaskSet):
+        @task(1)
+        def post_endpoints(self):
+         endpoint_data = [
+            {"endpoint": "/v1/data@post", "operation": "createData", "scope": "data.w"},
+            {"endpoint": "/v1/data@put", "operation": "updateData", "scope": "data.w"},
+            {"endpoint": "/v1/data@get", "operation": "retrieveData", "scope": "data.r"},
+            {"endpoint": "/v1/data@delete", "operation": "deleteData", "scope": "data.w"}
+        ]
+        
+         with self.client.post(f"/oauth2/service/AACT0001/endpoint", json=endpoint_data, verify=False, allow_redirects=False, catch_response=True) as response:
+            if response.status_code == 200:
+                logging.info("Successfully posted endpoint data.")
+                response.success()
+            else:
+                error_msg = f"Endpoint posting failed with status code: {response.status_code}"
+                logging.error(error_msg)
+                response.failure(error_msg)
+            self.interrupt()
