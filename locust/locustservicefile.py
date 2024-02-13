@@ -27,7 +27,6 @@ class OAuthServiceRegistration(HttpUser):
                 "scope": "read write",
                 "ownerId": "admin",
                 "host": "lightapi.net"
-                #redirect_uri?
             }, verify=False, allow_redirects=False, catch_response=True) as r:
 
                 if r.status_code == 200:
@@ -69,7 +68,7 @@ class OAuthServiceRegistration(HttpUser):
             with self.client.post("/oauth2/service", data={
                 "serviceType": "openapi",
                 "serviceProfile": "none",  # Error here
-                "serviceId": str(uuid4())[:8],  # Adjust the serviceId generation as needed
+                "serviceId": str(uuid4())[:8],
                 "serviceName": str(uuid4())[:32],
                 "serviceDesc": str(uuid4()),
                 "scope": "read write",
