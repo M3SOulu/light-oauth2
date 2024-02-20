@@ -41,6 +41,33 @@ class OAuthServiceRegistration(HttpUser):
 
         @task(1)
         @tag('error', 'register', '400')
+        def register_service_400_service_id(self):
+            try:
+                c = SERVICES.pop()
+            except KeyError:
+                self.interrupt()
+            with self.client.post("/oauth2/service", data={
+                "serviceType": "openapi",
+                "serviceId": c.serviceId,
+                "serviceName": str(uuid4())[:32],
+                "serviceDesc": str(uuid4()),
+                "scope": "read write",
+                "ownerId": "admin",
+                "host": "lightapi.net"
+            }, verify=False, allow_redirects=False, catch_response=True) as r:
+
+                if r.status_code == 400:
+                    logging.info("Service Registration: error code 400 returned as expected (existing serviceId )")
+                    r.success()
+                    SERVICES.add(c)
+                else:
+                    failure_str = f"Service Registration: did not return code 400 (serviceId). Instead: {r.status_code}"
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+                self.interrupt()
+
+        @task(1)
+        @tag('error', 'register', '400')
         def register_service_400_service_type(self):
             with self.client.post("/oauth2/service", data={
                 "serviceType": "none",  # Error here
