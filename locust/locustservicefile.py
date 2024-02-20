@@ -41,7 +41,7 @@ class OAuthServiceRegistration(HttpUser):
 
         @task(1)
         @tag('error', 'register', '400')
-        def register_service_400_serviceType(self):
+        def register_service_400_service_type(self):
             with self.client.post("/oauth2/service", data={
                 "serviceType": "none",  # Error here
                 "serviceId": str(uuid4())[:8], 
@@ -56,14 +56,14 @@ class OAuthServiceRegistration(HttpUser):
                     logging.info(f"Service Registration: error code 400 returned as expected (wrong serviceType)")
                     r.success()
                 else:
-                    failure_str = "Service Registration: did not return code 400 (serviceType). Instead: " + str(r.status_code)
+                    failure_str = f"Service Registration: did not return code 400 (serviceType). Instead: {r.status_code}"
                     logging.info(failure_str)
                     r.failure(failure_str)
                 self.interrupt()
 
         @task(1)
         @tag('error', 'register', '400')
-        def register_service_400_serviceProfile(self):
+        def register_service_400_service_profile(self):
             with self.client.post("/oauth2/service", data={
                 "serviceType": "openapi",
                 "serviceProfile": "none",  # Error here
@@ -76,10 +76,10 @@ class OAuthServiceRegistration(HttpUser):
             }, verify=False, allow_redirects=False, catch_response=True) as r:
 
                 if r.status_code == 400:
-                    logging.info(f"Service Registration: error code 400 returned as expected (wrong serviceProfile)")
+                    logging.info("Service Registration: error code 400 returned as expected (wrong serviceProfile)")
                     r.success()
                 else:
-                    failure_str = "Service Registration: did not return code 400 (serviceProfile). Instead: " + str(r.status_code)
+                    failure_str = f"Service Registration: did not return code 400 (serviceProfile). Instead: {r.status_code}"
                     logging.info(failure_str)
                     r.failure(failure_str)
                 self.interrupt()
@@ -101,7 +101,7 @@ class OAuthServiceRegistration(HttpUser):
                     logging.info("Service Registration: error code 404 returned as expected (non-existent user)")
                     r.success()
                 else:
-                    failure_str = "Service Registration: did not return code 404. Instead: " + str(r.status_code)
+                    failure_str = f"Service Registration: did not return code 404. Instead: {r.status_code}"
                     logging.info(failure_str)
                     r.failure(failure_str)
                 self.interrupt()
@@ -127,7 +127,9 @@ class OAuthServiceRegistration(HttpUser):
 
             }
 
-            with self.client.put("/oauth2/service", json=updated_data, verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.put("/oauth2/service", json=updated_data,
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 200:
                     logging.info(f"Updated service: serviceId = {updated_data['serviceId']}")
                     SERVICES.add(Service(updated_data['serviceName'], c.serviceId))
@@ -156,14 +158,16 @@ class OAuthServiceRegistration(HttpUser):
                 "host": "lightapi.net"
             }
             
-            with self.client.put("/oauth2/service", json=updated_data, verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.put("/oauth2/service", json=updated_data,
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info(f"service update without id failed as expected, 404")
                     SERVICES.add(c)
                     r.success()
                 else:
                     SERVICES.add(c)
-                    failstr = str(f"Unexpected status code when updating service without id: {r.status_code}")
+                    failstr = f"Unexpected status code when updating service without id: {r.status_code}"
                     logging.info(failstr)
                     r.failure(failstr)
                 self.interrupt()
@@ -193,7 +197,7 @@ class OAuthServiceRegistration(HttpUser):
                     logging.info("service deletion: error code 404 returned as expected")
                     r.success()
                 else:
-                    failure_str = "service deletion: did not return code 404. Instead: " + str(r.status_code)
+                    failure_str = f"Service deletion: did not return code 404. Instead: {r.status_code}"
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -218,12 +222,13 @@ class OAuthServiceRegistration(HttpUser):
         @task(1)
         @tag('error', 'get', '404')
         def get_service_404(self):
-            with self.client.get(f"/oauth2/service/none", verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.get(f"/oauth2/service/none", verify=False,
+                                 allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info("Tried to get the service with bad id, status 404 as expected.")
                     r.success()
                 else:
-                    failure_str = str(f'Get service with bad id got unexpected status code {r.status_code}')
+                    failure_str = f'Get service with bad id got unexpected status code {r.status_code}'
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -237,18 +242,20 @@ class OAuthServiceRegistration(HttpUser):
             if r.status_code == 200:
                 logging.info(f"Got service page with status_code 200.")
             else:
-                logging.info(f'service page get did not return code 200. Instead: {r.status_code}')
+                logging.info(f'Service page get did not return code 200. Instead: {r.status_code}')
             self.interrupt()
 
         @task(1)
         @tag('error', 'get', '400')
         def get_service_page_400(self):
-            with self.client.get("/oauth2/service", params={}, verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.get("/oauth2/service", params={},
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 400:
                     logging.info("Called service page without page, status 400 as expected.")
                     r.success()
                 else:
-                    failure_str = "service page get did not return code 400. Instead: " + str(r.status_code)
+                    failure_str = f"service page get did not return code 400. Instead: {r.status_code}"
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
