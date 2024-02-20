@@ -4,7 +4,7 @@ from locust.exception import RescheduleTask
 import logging
 from urllib.parse import urlparse, parse_qs
 
-from locust_client import CLIENTS
+from .locust_client import CLIENTS
 
 __all__ = ['OAuthUser']
 
