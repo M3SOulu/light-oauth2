@@ -6,6 +6,8 @@ from urllib.parse import urlparse, parse_qs
 
 from locust_client import CLIENTS
 
+__all__ = ['OAuthUser']
+
 
 class OAuthUser(HttpUser):
 

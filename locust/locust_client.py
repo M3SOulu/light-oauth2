@@ -7,6 +7,8 @@ from uuid import uuid4
 
 # Documentation: https://doc.networknt.com/service/oauth/service/client/
 
+__all__ = ['CLIENTS', 'Client', 'ClientRegistration']
+
 CLIENTS = set()
 Client = namedtuple("Client", ["clientName", "clientId", "clientSecret"])
 

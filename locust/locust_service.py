@@ -4,6 +4,8 @@ import logging
 from uuid import uuid4
 from collections import namedtuple
 
+__all__ = ['SERVICES', 'Service', 'ServiceRegistration']
+
 SERVICES = set()
 Service = namedtuple("Service", ["serviceName", "serviceId"])
 
