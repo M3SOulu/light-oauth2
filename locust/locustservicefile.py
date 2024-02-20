@@ -168,13 +168,40 @@ class OAuthServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('errror', 'update', '404')
-        def update_service_404(self):
+        @tag('error', 'update', '404')
+        def update_service_404_user_id(self):
             try:
                 c = SERVICES.pop()
             except KeyError:
                 raise RescheduleTask()
-            
+
+            updated_data = {
+                "serviceId": c.serviceId,
+                "serviceType": "swagger",
+                "serviceName": str(uuid4())[:32],
+                "serviceDesc": str(uuid4()),
+                "scope": "read write",
+                "ownerId": "nouser",
+                "host": "lightapi.net"
+            }
+
+            with self.client.put("/oauth2/service", json=updated_data,
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info(f"service update with unknown user id failed as expected, 404")
+                    SERVICES.add(c)
+                    r.success()
+                else:
+                    SERVICES.add(c)
+                    failstr = f"Unexpected status code when updating service with unknown user id: {r.status_code}"
+                    logging.info(failstr)
+                    r.failure(failstr)
+                self.interrupt()
+
+        @task(1)
+        @tag('error', 'update', '404')
+        def update_service_404_service_id(self):
             updated_data = {
                 "serviceId": "",
                 "serviceType": "swagger",
@@ -190,10 +217,8 @@ class OAuthServiceRegistration(HttpUser):
                                  catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info(f"service update without id failed as expected, 404")
-                    SERVICES.add(c)
                     r.success()
                 else:
-                    SERVICES.add(c)
                     failstr = f"Unexpected status code when updating service without id: {r.status_code}"
                     logging.info(failstr)
                     r.failure(failstr)
