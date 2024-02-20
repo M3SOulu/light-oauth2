@@ -11,7 +11,7 @@ CLIENTS = set()
 Client = namedtuple("Client", ["clientName", "clientId", "clientSecret"])
 
 
-class OAuthClientRegistration(HttpUser):
+class ClientRegistration(HttpUser):
 
     fixed_count = 1
     host = "https://localhost:6884"

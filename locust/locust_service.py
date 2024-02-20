@@ -8,7 +8,7 @@ SERVICES = set()
 Service = namedtuple("Service", ["serviceName", "serviceId"])
 
 
-class OAuthServiceRegistration(HttpUser):
+class ServiceRegistration(HttpUser):
 
     fixed_count = 1
     host = "https://localhost:6883"
