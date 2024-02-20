@@ -2,11 +2,11 @@ from locust import HttpUser, TaskSet, task, tag
 from locust.exception import RescheduleTask
 import logging
 from uuid import uuid4
-from urllib.parse import urlparse, parse_qs
 from collections import namedtuple
 
 SERVICES = set()
-Service = namedtuple("Service", ["serviceName", "serviceId"]) #serviceSecret
+Service = namedtuple("Service", ["serviceName", "serviceId"])
+
 
 class OAuthServiceRegistration(HttpUser):
 
@@ -32,7 +32,6 @@ class OAuthServiceRegistration(HttpUser):
                 if r.status_code == 200:
                     t = r.json()
                     logging.info(f"Registered service: serviceName = {t['serviceName']}, serviceId = {t['serviceId']}")
-                    #service secret?
                     SERVICES.add(Service(t['serviceName'], t['serviceId']))
                     r.success()
                 else:
@@ -111,12 +110,11 @@ class OAuthServiceRegistration(HttpUser):
     class UpdateService(TaskSet):
 
         @task(1)
-        @tag('correct','update','200')
+        @tag('correct', 'update', '200')
         def update_service_200(self):
             try:
                 c = SERVICES.pop()
             except KeyError:
-                #logging.info("No services available to update")
                 raise RescheduleTask()
             updated_data = {
                 "serviceId": c.serviceId,
@@ -124,7 +122,7 @@ class OAuthServiceRegistration(HttpUser):
                 "serviceName": str(uuid4())[:32],
                 "serviceDesc": str(uuid4()),
                 "scope": "read write",
-                "ownerId" : "admin",
+                "ownerId": "admin",
                 "host": "lightapi.net"
 
             }
@@ -132,7 +130,7 @@ class OAuthServiceRegistration(HttpUser):
             with self.client.put("/oauth2/service", json=updated_data, verify=False, allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 200:
                     logging.info(f"Updated service: serviceId = {updated_data['serviceId']}")
-                    SERVICES.add(Service(updated_data['serviceName'], c.serviceId)) #serviceSecret
+                    SERVICES.add(Service(updated_data['serviceName'], c.serviceId))
                     r.success()
                 else:
                     SERVICES.add(c)
@@ -141,20 +139,20 @@ class OAuthServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('errror','update','404')
+        @tag('errror', 'update', '404')
         def update_service_404(self):
             try:
                 c = SERVICES.pop()
-            except KeyError: #logging.info("No services available to update")
+            except KeyError:
                 raise RescheduleTask()
             
             updated_data = {
-                "serviceId" : "",
-                "serviceType" : "swagger",
+                "serviceId": "",
+                "serviceType": "swagger",
                 "serviceName": str(uuid4())[:32],
                 "serviceDesc": str(uuid4()),
                 "scope": "read write",
-                "ownerId" : "admin",
+                "ownerId": "admin",
                 "host": "lightapi.net"
             }
             
@@ -173,7 +171,7 @@ class OAuthServiceRegistration(HttpUser):
     @task(1)
     class DeleteService(TaskSet):            
         @task(1)
-        @tag('correct','delete','200')
+        @tag('correct', 'delete', '200')
         def delete_service_200(self):
             try:
                 c = SERVICES.pop()
@@ -188,7 +186,7 @@ class OAuthServiceRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error','delete','404')
+        @tag('error', 'delete', '404')
         def delete_service_404(self):
             with self.client.delete(f"/oauth2/service/not_service_id", verify=False, allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
