@@ -185,7 +185,7 @@ class ClientRegistration(HttpUser):
                     failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
                     logging.info(failstr)
                     r.failure(failstr)
-            self.interrupt()
+                self.interrupt()
 
     @task(1)
     class DeleteClient(TaskSet):
