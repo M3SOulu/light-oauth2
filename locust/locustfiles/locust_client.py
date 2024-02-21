@@ -118,7 +118,7 @@ class ClientRegistration(HttpUser):
                     r.failure(failure_str)
                 self.interrupt()
 
-    @task(1)
+    @task(0)
     class UpdateClient(TaskSet):
 
         @task(1)
