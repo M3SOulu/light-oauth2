@@ -18,6 +18,7 @@ class Service:
     scope: str = field(default="read write", repr=True, hash=False)
     ownerId: str = field(default="admin", repr=False, hash=False)
     host: str = field(default="lightapi.net", repr=False, hash=False)
+    endpoints: list[str] = field(default_factory=list, repr=False, hash=False)
 
     def to_dict(self):
         return {"serviceType": self.serviceType,
