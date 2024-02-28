@@ -2,12 +2,31 @@ from locust import HttpUser, TaskSet, task, tag
 from locust.exception import RescheduleTask
 import logging
 from uuid import uuid4
-from collections import namedtuple
+from dataclasses import dataclass, field, replace
 
 __all__ = ['SERVICES', 'Service', 'ServiceRegistration']
 
 SERVICES = set()
-Service = namedtuple("Service", ["serviceName", "serviceId"])
+
+
+@dataclass(init=True, repr=True, eq=False)
+class Service:
+    serviceId: str = field(default_factory=lambda: str(uuid4())[:8], repr=True, hash=True)
+    serviceName: str = field(default_factory=lambda: str(uuid4())[:32], repr=False, hash=False)
+    serviceDesc: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
+    serviceType: str = field(default="openapi", repr=True, hash=False)
+    scope: str = field(default="read write", repr=True, hash=False)
+    ownerId: str = field(default="admin", repr=False, hash=False)
+    host: str = field(default="lightapi.net", repr=False, hash=False)
+
+    def to_dict(self):
+        return {"serviceType": self.serviceType,
+                "serviceId": self.serviceId,
+                "serviceName": self.serviceName,
+                "serviceDesc": self.serviceDesc,
+                "scope": self.scope,
+                "ownerId": self.ownerId,
+                "host": self.host}
 
 
 class ServiceRegistration(HttpUser):
@@ -21,22 +40,17 @@ class ServiceRegistration(HttpUser):
         @task(1)
         @tag('correct', 'register', '200')
         def register_service_200(self):
-            with self.client.post("/oauth2/service", data={
-                "serviceType": "openapi",
-                "serviceId": str(uuid4())[:8],  
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "admin",
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
+            service = Service()
+            with self.client.post("/oauth2/service", data=service.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
 
                 if r.status_code == 200:
-                    t = r.json()
-                    logging.info(f"Registered service: serviceName = {t['serviceName']}, serviceId = {t['serviceId']}")
-                    SERVICES.add(Service(t['serviceName'], t['serviceId']))
+                    logging.info(f"Registered service: {service!r}")
+                    SERVICES.add(service)
                     r.success()
                 else:
+                    del service
                     logging.info("Service registration did not return code 200")
                     r.failure("Service registration did not return code 200")
                 self.interrupt()
@@ -45,23 +59,16 @@ class ServiceRegistration(HttpUser):
         @tag('error', 'register', '400')
         def register_service_400_service_id(self):
             try:
-                c = SERVICES.pop()
+                service = SERVICES.pop()
+                SERVICES.add(service)
             except KeyError:
                 self.interrupt()
-            with self.client.post("/oauth2/service", data={
-                "serviceType": "openapi",
-                "serviceId": c.serviceId,
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "admin",
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
-
+            with self.client.post("/oauth2/service", data=service.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
                 if r.status_code == 400:
                     logging.info("Service Registration: error code 400 returned as expected (existing serviceId )")
                     r.success()
-                    SERVICES.add(c)
                 else:
                     failure_str = f"Service Registration: did not return code 400 (serviceId). Instead: {r.status_code}"
                     logging.info(failure_str)
@@ -71,15 +78,10 @@ class ServiceRegistration(HttpUser):
         @task(1)
         @tag('error', 'register', '400')
         def register_service_400_service_type(self):
-            with self.client.post("/oauth2/service", data={
-                "serviceType": "none",  # Error here
-                "serviceId": str(uuid4())[:8], 
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "admin",
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
+            service = Service(serviceType="none")
+            with self.client.post("/oauth2/service", data=service.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
 
                 if r.status_code == 400:
                     logging.info(f"Service Registration: error code 400 returned as expected (wrong serviceType)")
@@ -93,15 +95,10 @@ class ServiceRegistration(HttpUser):
         @task(1)
         @tag('error', 'register', '404')
         def register_service_404(self):
-            with self.client.post("/oauth2/service", data={
-                "serviceType": "openapi",
-                "serviceId": str(uuid4())[:8],
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "nouser",  # Error here
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
+            service = Service(ownerId="nouser")
+            with self.client.post("/oauth2/service", data=service.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info("Service Registration: error code 404 returned as expected (non-existent user)")
                     r.success()
@@ -118,29 +115,22 @@ class ServiceRegistration(HttpUser):
         @tag('correct', 'update', '200')
         def update_service_200(self):
             try:
-                c = SERVICES.pop()
+                service = SERVICES.pop()
             except KeyError:
                 raise RescheduleTask()
-            updated_data = {
-                "serviceId": c.serviceId,
-                "serviceType": "swagger",
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "admin",
-                "host": "lightapi.net"
+            service2 = replace(service, serviceId=service.serviceId, serviceType="swagger")
 
-            }
-
-            with self.client.put("/oauth2/service", json=updated_data,
+            with self.client.put("/oauth2/service", json=service2.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Updated service: serviceId = {updated_data['serviceId']}")
-                    SERVICES.add(Service(updated_data['serviceName'], c.serviceId))
+                    SERVICES.add(service2)
+                    logging.info(f"Updated service: {service2!r}")
+                    del service
                     r.success()
                 else:
-                    SERVICES.add(c)
+                    SERVICES.add(service)
+                    del service2
                     logging.info(f"Service update failed with unexpected status code: {r.status_code}")
                     r.failure(f"Service update failed with unexpected status code: {r.status_code}")
                 self.interrupt()
@@ -149,29 +139,20 @@ class ServiceRegistration(HttpUser):
         @tag('error', 'update', '404')
         def update_service_404_user_id(self):
             try:
-                c = SERVICES.pop()
+                service = SERVICES.pop()
+                SERVICES.add(service)
             except KeyError:
                 raise RescheduleTask()
+            service2 = replace(service, serviceId=service.serviceId, serviceType="swagger",
+                               ownerId="nouser")
 
-            updated_data = {
-                "serviceId": c.serviceId,
-                "serviceType": "swagger",
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "nouser",
-                "host": "lightapi.net"
-            }
-
-            with self.client.put("/oauth2/service", json=updated_data,
+            with self.client.put("/oauth2/service", json=service2.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info(f"service update with unknown user id failed as expected, 404")
-                    SERVICES.add(c)
                     r.success()
                 else:
-                    SERVICES.add(c)
                     failstr = f"Unexpected status code when updating service with unknown user id: {r.status_code}"
                     logging.info(failstr)
                     r.failure(failstr)
@@ -180,17 +161,14 @@ class ServiceRegistration(HttpUser):
         @task(1)
         @tag('error', 'update', '404')
         def update_service_404_service_id(self):
-            updated_data = {
-                "serviceId": "",
-                "serviceType": "swagger",
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "admin",
-                "host": "lightapi.net"
-            }
-            
-            with self.client.put("/oauth2/service", json=updated_data,
+            try:
+                service = SERVICES.pop()
+                SERVICES.add(service)
+            except KeyError:
+                raise RescheduleTask()
+            service2 = replace(service, serviceId="")
+
+            with self.client.put("/oauth2/service", json=service2.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
@@ -208,21 +186,23 @@ class ServiceRegistration(HttpUser):
         @tag('correct', 'delete', '200')
         def delete_service_200(self):
             try:
-                c = SERVICES.pop()
+                service = SERVICES.pop()
             except KeyError:
                 raise RescheduleTask()
-            r = self.client.delete(f"/oauth2/service/{c.serviceId}", verify=False, allow_redirects=False)
+            r = self.client.delete(f"/oauth2/service/{service.serviceId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
-                logging.info(f"Deleted service: serviceName = {c.serviceName}, serviceId = {c.serviceId}")
+                logging.info(f"Deleted service: {service!r}")
+                del service
             else:
                 logging.info('Service deletion did not return code 200')
-                SERVICES.add(c)
+                SERVICES.add(service)
             self.interrupt()
 
         @task(1)
         @tag('error', 'delete', '404')
         def delete_service_404(self):
-            with self.client.delete(f"/oauth2/service/not_service_id", verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.delete(f"/oauth2/service/not_service_id", verify=False,
+                                    allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info("service deletion: error code 404 returned as expected")
                     r.success()
@@ -238,15 +218,15 @@ class ServiceRegistration(HttpUser):
         @tag('correct', 'get', '200')
         def get_service_200(self):
             try:
-                c = SERVICES.pop()
+                service = SERVICES.pop()
+                SERVICES.add(service)
             except KeyError:
                 raise RescheduleTask()
-            r = self.client.get(f"/oauth2/service/{c.serviceId}", verify=False, allow_redirects=False)
+            r = self.client.get(f"/oauth2/service/{service.serviceId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
-                logging.info(f"Got service: serviceName = {c.serviceName}, serviceId = {c.serviceId}")
+                logging.info(f"Got service: {service!r}")
             else:
                 logging.info(f'Service get did not return code 200. Instead: {r.status_code}')
-            SERVICES.add(c)
             self.interrupt()
 
         @task(1)
