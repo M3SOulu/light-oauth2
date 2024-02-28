@@ -91,35 +91,11 @@ class ServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '400')
-        def register_service_400_service_profile(self):
-            with self.client.post("/oauth2/service", data={
-                "serviceType": "openapi",
-                "serviceProfile": "none",  # Error here
-                "serviceId": str(uuid4())[:8],
-                "serviceName": str(uuid4())[:32],
-                "serviceDesc": str(uuid4()),
-                "scope": "read write",
-                "ownerId": "admin",
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
-
-                if r.status_code == 400:
-                    logging.info("Service Registration: error code 400 returned as expected (wrong serviceProfile)")
-                    r.success()
-                else:
-                    failure_str = f"Service Registration: did not return code 400 (serviceProfile). Instead: {r.status_code}"
-                    logging.info(failure_str)
-                    r.failure(failure_str)
-                self.interrupt()
-
-        @task(1)
         @tag('error', 'register', '404')
         def register_service_404(self):
             with self.client.post("/oauth2/service", data={
                 "serviceType": "openapi",
-                "serviceProfile": "mobile",
-                "serviceId": str(uuid4())[:8],  
+                "serviceId": str(uuid4())[:8],
                 "serviceName": str(uuid4())[:32],
                 "serviceDesc": str(uuid4()),
                 "scope": "read write",
