@@ -34,6 +34,20 @@ class ServiceRegistration(HttpUser):
     fixed_count = 1
     host = "https://localhost:6883"
 
+    def on_start(self):
+        service = Service()
+        with self.client.post("/oauth2/service", data=service.to_dict(),
+                              verify=False, allow_redirects=False,
+                              catch_response=True) as r:
+
+            if r.status_code == 200:
+                logging.info(f"Registered service: {service!r}")
+                SERVICES.add(service)
+                r.success()
+            else:
+                raise RuntimeError(f"First attempt to register Service failed, return code was {r.status_code}")
+
+
     @task(1)
     class RegisterService(TaskSet):
 

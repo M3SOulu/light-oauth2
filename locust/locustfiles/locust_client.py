@@ -42,6 +42,21 @@ class ClientRegistration(HttpUser):
     fixed_count = 1
     host = "https://localhost:6884"
 
+    def on_start(self):
+        c = Client(clientId="none", clientSecret="none")
+        with self.client.post("/oauth2/client", data=c.to_dict(),
+                              verify=False, allow_redirects=False,
+                              catch_response=True) as r:
+            if r.status_code == 200:
+                t = r.json()
+                c.clientId = t['clientId']
+                c.clientSecret = t['clientSecret']
+                logging.info(f"Registered client: {c!r}")
+                CLIENTS.add(c)
+                r.success()
+            else:
+                raise RuntimeError(f"First attempt to register Client failed, status code was {r.status_code}")
+
     @task(1)
     class RegisterClient(TaskSet):
 
