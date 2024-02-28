@@ -2,15 +2,39 @@ from locust import HttpUser, task, TaskSet, tag
 from locust.exception import RescheduleTask
 
 import logging
-from collections import namedtuple
 from uuid import uuid4
+from dataclasses import dataclass, field, replace
 
 # Documentation: https://doc.networknt.com/service/oauth/service/client/
 
 __all__ = ['CLIENTS', 'Client', 'ClientRegistration']
 
 CLIENTS = set()
-Client = namedtuple("Client", ["clientName", "clientId", "clientSecret"])
+
+
+@dataclass(init=True, repr=True, eq=False)
+class Client:
+    clientId: str = field(repr=True, hash=True)
+    clientSecret: str = field(repr=False, hash=False)
+    clientName: str = field(default_factory=lambda: str(uuid4())[:32], repr=False, hash=False)
+    clientDesc: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
+    clientProfile: str = field(default="mobile", repr=False, hash=False) # TODO put different if important?
+    clientType: str = field(default="public", repr=False, hash=False) # TODO implement different types for different auth flows
+    scope: str = field(default="read write", repr=True, hash=False) # TODO implement different scopes
+    ownerId: str = field(default="admin", repr=False, hash=False) # TODO implement different users
+    host: str = field(default="lightapi.net", repr=False, hash=False)
+    redirectUri: str = field(default="http://localhost:8000/authorization", repr=False, hash=False)
+    endpoints: list[str] = field(default_factory=list, repr=False, hash=False)
+
+    def to_dict(self):
+        return {"clientType": self.clientType,
+                "clientProfile": self.clientProfile,
+                "clientName": self.clientName,
+                "clientDesc": self.clientDesc,
+                "scope": self.scope,
+                "redirectUri": self.redirectUri,
+                "ownerId": self.ownerId,
+                "host": self.host}
 
 
 class ClientRegistration(HttpUser):
@@ -24,25 +48,19 @@ class ClientRegistration(HttpUser):
         @task(1)
         @tag('correct', 'register', '200')
         def register_client_200(self):
-            with self.client.post("/oauth2/client", data=
-            {
-                "clientType": "public",  # TODO implement different types for different auth flows
-                "clientProfile": "mobile",  # TODO put different if important?
-                "clientName": str(uuid4())[:32],
-                "clientDesc": str(uuid4()),
-                "scope": "read write",  # TODO implement different scopes
-                "redirectUri": "http://localhost:8000/authorization",
-                "ownerId": "admin",  # TODO implement different users
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
-
+            c = Client(clientId="none", clientSecret="none")
+            with self.client.post("/oauth2/client", data=c.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
                 if r.status_code == 200:
                     t = r.json()
-                    logging.info(f"Registered client: clientName = {t['clientName']}, clientId = {t['clientId']},"
-                                 f" clientSecret = {t['clientSecret']}")
-                    CLIENTS.add(Client(t['clientName'], t['clientId'], t['clientSecret']))
+                    c.clientId = t['clientId']
+                    c.clientSecret = t['clientSecret']
+                    logging.info(f"Registered client: {c!r}")
+                    CLIENTS.add(c)
                     r.success()
                 else:
+                    del c
                     logging.info("Client registration did not return code 200")
                     r.failure("Client registration did not return code 200")
                 self.interrupt()
@@ -50,17 +68,15 @@ class ClientRegistration(HttpUser):
         @task(1)
         @tag('error', 'register', '400')
         def register_client_400_clientType(self):
-            with self.client.post("/oauth2/client", data=
-            {
-                "clientType": "none",  # Error here
-                "clientProfile": "mobile",
-                "clientName": str(uuid4())[:32],
-                "clientDesc": str(uuid4()),
-                "scope": "read write",
-                "redirectUri": "http://localhost:8000/authorization",
-                "ownerId": "admin",
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
+            try:
+                c = CLIENTS.pop()
+                CLIENTS.add(c)
+            except KeyError:
+                raise RescheduleTask()
+            c2 = replace(c, clientType="none")
+            with self.client.post("/oauth2/client", data=c2.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
 
                 if r.status_code == 400:
                     logging.info(f"Client Registration: error code 400 returned as expected (wrong clientType)")
@@ -69,22 +85,21 @@ class ClientRegistration(HttpUser):
                     failure_str = "Client Registration: did not return code 400 (clientType). Instead: " + str(r.status_code)
                     logging.info(failure_str)
                     r.failure(failure_str)
+                del c2
                 self.interrupt()
 
         @task(1)
         @tag('error', 'register', '400')
         def register_client_400_clientProfile(self):
-            with self.client.post("/oauth2/client", data=
-            {
-                "clientType": "public",
-                "clientProfile": "none",
-                "clientName": str(uuid4())[:32],
-                "clientDesc": str(uuid4()),
-                "scope": "read write",
-                "redirectUri": "http://localhost:8000/authorization",
-                "ownerId": "admin",
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
+            try:
+                c = CLIENTS.pop()
+                CLIENTS.add(c)
+            except KeyError:
+                raise RescheduleTask()
+            c2 = replace(c, clientProfile="none")
+            with self.client.post("/oauth2/client", data=c2.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
 
                 if r.status_code == 400:
                     logging.info(f"Client Registration: error code 400 returned as expected (wrong clientProfile)")
@@ -93,22 +108,21 @@ class ClientRegistration(HttpUser):
                     failure_str = "Client Registration: did not return code 400 (clientProfile). Instead: " + str(r.status_code)
                     logging.info(failure_str)
                     r.failure(failure_str)
+                del c2
                 self.interrupt()
 
         @task(1)
         @tag('error', 'register', '404')
         def register_client_404(self):
-            with self.client.post("/oauth2/client", data=
-            {
-                "clientType": "public",
-                "clientProfile": "mobile",
-                "clientName": str(uuid4())[:32],
-                "clientDesc": str(uuid4()),
-                "scope": "read write",
-                "redirectUri": "http://localhost:8000/authorization",
-                "ownerId": "nouser",  # Error here
-                "host": "lightapi.net"
-            }, verify=False, allow_redirects=False, catch_response=True) as r:
+            try:
+                c = CLIENTS.pop()
+                CLIENTS.add(c)
+            except KeyError:
+                raise RescheduleTask()
+            c2 = replace(c, ownerId="nouser")
+            with self.client.post("/oauth2/client", data=c2.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info("Client Registration: error code 404 returned as expected (non-existent user)")
                     r.success()
@@ -116,6 +130,7 @@ class ClientRegistration(HttpUser):
                     failure_str = "Client Registration: did not return code 404. Instead: " + str(r.status_code)
                     logging.info(failure_str)
                     r.failure(failure_str)
+                del c2
                 self.interrupt()
 
 ### Update client start
@@ -127,58 +142,40 @@ class ClientRegistration(HttpUser):
         except KeyError:
             #logging.info("No clients available to update")
             raise RescheduleTask()
+        c2 = replace(c, clientName=str(uuid4())[:32])
 
-        updated_data = {
-            "clientId": c.clientId,
-            "clientType": "public",  # Assuming 'public' is a valid clientType
-            "clientProfile": "mobile",
-            "clientName": str(uuid4())[:32],
-            "clientDesc": str(uuid4()),
-            "scope": "read write",
-            "redirectUri": "http://localhost:8000/authorization",
-            "ownerId": "admin",  # Assuming 'admin' is a valid ownerId
-            "host": "lightapi.net"
-        }
-
-        with self.client.put("/oauth2/client", json=updated_data, verify=False, allow_redirects=False, catch_response=True) as r:
+        with self.client.put("/oauth2/client", json=c2.to_dict(),
+                             verify=False, allow_redirects=False,
+                             catch_response=True) as r:
             if r.status_code == 200:
-                logging.info(f"Updated client: clientId = {updated_data['clientId']}")
-                CLIENTS.add(Client(updated_data['clientName'], c.clientId, c.clientSecret)) #for the stored client tuple, only name changes
+                logging.info(f"Updated client: {c2!r}")
+                CLIENTS.add(c2)
+                del c
                 r.success()
             else:
                 CLIENTS.add(c)
+                del c2
                 logging.info(f"Client update failed with unexpected status code: {r.status_code}")
                 r.failure(f"Client update failed with unexpected status code: {r.status_code}")
-
 
     @task(1)
     @tag('error', 'update', '404')
     def update_client_404(self):
         try:
             c = CLIENTS.pop()
+            CLIENTS.add(c)
         except KeyError:
             #logging.info("No clients available to update")
             raise RescheduleTask()
+        c2 = replace(c, clientId="", clientName=str(uuid4())[:32])
 
-        updated_data = {
-            "clientId": "",
-            "clientType": "public",  # Assuming 'public' is a valid clientType
-            "clientProfile": "mobile",
-            "clientName": str(uuid4())[:32],
-            "clientDesc": str(uuid4()),
-            "scope": "read write",
-            "redirectUri": "http://localhost:8000/authorization",
-            "ownerId": "admin",  # Assuming 'admin' is a valid ownerId
-            "host": "lightapi.net"
-        }
-
-        with self.client.put("/oauth2/client", json=updated_data, verify=False, allow_redirects=False, catch_response=True) as r:
+        with self.client.put("/oauth2/client", json=c2.to_dict(),
+                             verify=False, allow_redirects=False,
+                             catch_response=True) as r:
             if r.status_code == 404:
                 logging.info(f"Client update without id failed as expected, 404")
-                CLIENTS.add(c)
                 r.success()
             else:
-                CLIENTS.add(c)
                 failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
                 logging.info(failstr)
                 r.failure(failstr)
@@ -195,8 +192,8 @@ class ClientRegistration(HttpUser):
                 raise RescheduleTask()
             r = self.client.delete(f"/oauth2/client/{c.clientId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
-                logging.info(f"Deleted client: clientName = {c.clientName}, clientId = {c.clientId},"
-                             f" clientSecret = {c.clientSecret}")
+                logging.info(f"Deleted client: {c!r}")
+                del c
             else:
                 logging.info('Client deletion did not return code 200')
                 CLIENTS.add(c)
@@ -222,15 +219,14 @@ class ClientRegistration(HttpUser):
         def get_client_200(self):
             try:
                 c = CLIENTS.pop()
+                CLIENTS.add(c)
             except KeyError:
                 raise RescheduleTask()
             r = self.client.get(f"/oauth2/client/{c.clientId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
-                logging.info(f"Got client: clientName = {c.clientName}, clientId = {c.clientId},"
-                             f" clientSecret = {c.clientSecret}")
+                logging.info(f"Got client: {c!r}")
             else:
                 logging.info(f'Client get did not return code 200. Instead: {r.status_code}')
-            CLIENTS.add(c)
             self.interrupt()
 
         @task(1)
