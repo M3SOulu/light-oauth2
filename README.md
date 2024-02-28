@@ -47,9 +47,9 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] `/oauth2/client@put` *update existing client*
         - [x] 200 *correct*
         - [x] 404 *`clientId` not found*
-        - [x] 400 *`clientType` has illegal value*
-        - [x] 400 *`clientProfile` has illegal value*
-        - [x] 404 *user not found*
+        - [ ] 400 *`clientType` has illegal value*
+        - [ ] 400 *`clientProfile` has illegal value*
+        - [ ] 404 *user not found*
     - [x] `/oauth2/client@get` *get clients from database*
          - [x] 200 *correct*
          - [x] 400 *`page` parameter missing*
