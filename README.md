@@ -63,7 +63,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
          - [ ] 200 *correct*
          - [ ] 404 *`clientId` not found*
          - [ ] 404 *`serviceId` not found*
-    - [ ] `/oauth2/client/{clientId}/service/{serviceId}@delete` *delete linked endpoints of a client
+    - [ ] `/oauth2/client/{clientId}/service/{serviceId}@delete` *delete linked endpoints of a client*
          - [ ] 200 *correct*
          - [ ] 404 *`clientId` not found*
          - [ ] 404 *`serviceId` not found*
@@ -160,7 +160,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
 - [ ] Scope management
   - [ ] Linking endpoints to clients
   - [ ] Scope parameter in code/token requests
-- [] Different values of
+- [ ] Different values of
   - [ ] Service type
   - [ ] Client type
   - [ ] Client profile
