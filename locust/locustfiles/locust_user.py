@@ -63,7 +63,7 @@ class UserRegistration(HttpUser):
         @tag('correct', 'update', '200')
         def update_user_200(self):
             try:
-                user = User().pop()
+                user = USERS.pop()
             except KeyError:
                   self.interrupt
             userupdate = replace(user, userId=user.userId)
@@ -77,6 +77,7 @@ class UserRegistration(HttpUser):
                      del user
                      r.success()
                 else:
+                     USERS.add(user)
                      del userupdate
                      logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
                      r.failure(f"User updation did not return code 200", {r.status_code})
