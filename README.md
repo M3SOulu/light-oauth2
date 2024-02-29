@@ -85,7 +85,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
         - [ ] 400 *password confirmation failed*
         - [ ] 400 *password empty*
     - [ ] `/oauth2/user@put` *update user*
-        - [ ] 200 *correct*
+        - [x] 200 *correct*
         - [ ] 404 *user not found*
     - [ ] `/oauth2/user@get` *get all users*
         - [ ] 200 *correct*
