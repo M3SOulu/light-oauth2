@@ -64,7 +64,6 @@ class UserRegistration(HttpUser):
         def update_user_200(self):
             try:
                 user = User().pop()
-                User.add(user)
             except KeyError:
                   self.interrupt
             userupdate = replace(user, userId=user.userId)
