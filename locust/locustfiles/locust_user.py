@@ -12,7 +12,7 @@ __all__ = ['USERS', 'User', 'UserRegistration']
 USERS = set()
 
 
-@dataclass
+@dataclass(init=True, repr=True, eq=False)
 class User:
     userId: str = field(default_factory=lambda: str(uuid4())[:8], repr=True, hash=True)
     firstName: str = field(default_factory=lambda: str(uuid4())[:32], repr=False, hash=False)
