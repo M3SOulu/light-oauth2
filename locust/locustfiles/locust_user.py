@@ -83,6 +83,26 @@ class UserRegistration(HttpUser):
                      r.failure(f"User updation did not return code 200", {r.status_code})
                 self.interrupt()
 
+        @task(1)
+        @tag('error', 'update', '404')
+        def update_user_404(self):
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            userupdate = replace(user, userId="")
 
+            with self.client.put("/oauth2/user", json=userupdate.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info(f"user update without id failed as expected, 404")
+                    r.success()
+                else:
+                    failstr = f"Unexpected status code when updating user without id: {r.status_code}"
+                    logging.info(failstr)
+                    r.failure(failstr)
+                self.interrupt()
           
                    
