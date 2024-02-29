@@ -79,7 +79,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
         - [ ] 404 *`clientId` not found*
 - [ ] `oauth2-user` *handle user database*
     - [ ] `/oauth2/user@post` *create new user*
-        - [ ] 200 *correct*
+        - [x] 200 *correct*
         - [ ] 400 *`userId` exists*
         - [ ] 400 *email exists*
         - [ ] 400 *password confirmation failed*
