@@ -47,7 +47,7 @@ class OAuthUser(HttpUser):
 
         def on_start(self):
             try:
-                self.cl = CLIENTS.pop()
+                self.user.cl = CLIENTS.pop()
             except KeyError:
                 raise RescheduleTask()
 
@@ -94,4 +94,4 @@ class OAuthUser(HttpUser):
             self.interrupt()
 
         def on_stop(self):
-            CLIENTS.add(self.cl)
+            CLIENTS.add(self.user.cl)
