@@ -228,7 +228,32 @@ class ClientRegistration(HttpUser):
 
         @task(1)
         @tag('error', 'update', '404')
-        def update_client_404(self):
+        def update_client_404_ownerId(self):
+            try:
+                c = CLIENTS.pop()
+                CLIENTS.add(c)
+            except KeyError:
+                #logging.info("No clients available to update")
+                self.interrupt()
+            c2 = replace(c, ownerid="nouser")
+            with self.client.put("/oauth2/client", json=c2.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info(f"Client update with wrong ownerId failed as expected, 400")
+                    r.success()
+                else:
+                    failstr = str(f"Unexpected status code when updating client with wrong ownerId: {r.status_code}")
+                    logging.info(failstr)
+                    r.failure(failstr)
+                    if r.status_code == 200:
+                        CLIENTS.discard(c)
+                del c2
+                self.interrupt()
+
+        @task(1)
+        @tag('error', 'update', '404')
+        def update_client_404_clientId(self):
             try:
                 c = CLIENTS.pop()
                 CLIENTS.add(c)
