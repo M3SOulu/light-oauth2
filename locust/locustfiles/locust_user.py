@@ -18,7 +18,7 @@ class User:
     firstName: str = field(default_factory=lambda: str(uuid4())[:32], repr=False, hash=False)
     lastName: str = field(default_factory=lambda: str(uuid4())[:32], repr=False, hash=False)
     userType: str = field(default="admin", repr=True, hash=False)
-    email: str = field(default='first.last@oulu.fi', repr=False, hash=False)
+    email: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
     password: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
 
     def to_dict(self):
