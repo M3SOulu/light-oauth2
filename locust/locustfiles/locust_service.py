@@ -132,7 +132,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.pop()
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             service2 = replace(service, serviceId=service.serviceId, serviceType="swagger")
 
             with self.client.put("/oauth2/service", json=service2.to_dict(),
@@ -157,7 +157,7 @@ class ServiceRegistration(HttpUser):
                 service = SERVICES.pop()
                 SERVICES.add(service)
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             service2 = replace(service, serviceId=service.serviceId, serviceType="swagger",
                                ownerId="nouser")
 
@@ -180,7 +180,7 @@ class ServiceRegistration(HttpUser):
                 service = SERVICES.pop()
                 SERVICES.add(service)
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             service2 = replace(service, serviceId="")
 
             with self.client.put("/oauth2/service", json=service2.to_dict(),
