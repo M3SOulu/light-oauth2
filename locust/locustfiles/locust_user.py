@@ -53,6 +53,6 @@ class UserRegistration(HttpUser):
                     r.success()
                 else:
                     del user
-                    logging.info("User registration did not return code 200")
+                    logging.info(f"User registration did not return code 200, instead {r.status_code}, {r.text}")
                     r.failure("User registration did not return code 200")
                 self.interrupt()
