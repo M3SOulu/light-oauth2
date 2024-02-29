@@ -189,7 +189,7 @@ class ClientRegistration(HttpUser):
             with self.client.put("/oauth2/client", json=c2.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
-                if r.status_code == 404:
+                if r.status_code == 400:
                     logging.info(f"Client update with wrong clientType failed as expected, 400")
                     r.success()
                 else:
@@ -214,7 +214,7 @@ class ClientRegistration(HttpUser):
             with self.client.put("/oauth2/client", json=c2.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
-                if r.status_code == 404:
+                if r.status_code == 400:
                     logging.info(f"Client update with wrong clientProfile failed as expected, 400")
                     r.success()
                 else:
