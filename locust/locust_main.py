@@ -1,1 +1,1 @@
-from locustfiles import ServiceRegistration, ClientRegistration, OAuthUser
+from locustfiles import ServiceRegistration, ClientRegistration, UserRegistration, OAuthUser
