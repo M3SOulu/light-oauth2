@@ -121,3 +121,17 @@ class UserRegistration(HttpUser):
             else:
                 logging.info(f'user get did not return code 200. Instead: {r.status_code}')
             self.interrupt()                  
+
+        @task(1)
+        @tag('error', 'get', '404')
+        def get_user_404(self):
+            with self.client.get(f"/oauth2/user/none", verify=False,
+                                 allow_redirects=False, catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info("Tried to get the user with bad id, status 404 as expected.")
+                    r.success()
+                else:
+                    failure_str = f'Get user with bad id got unexpected status code {r.status_code}'
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
