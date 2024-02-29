@@ -58,7 +58,7 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
     @task(1)
-    class UpdateService(TaskSet):
+    class UpdateUser(TaskSet):
         @task(1)
         @tag('correct', 'update', '200')
         def update_user_200(self):
