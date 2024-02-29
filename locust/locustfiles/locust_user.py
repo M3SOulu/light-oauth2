@@ -97,7 +97,7 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.info(f"user update without id failed as expected, 404")
+                    logging.info(f"User update without id failed as expected, 404")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when updating user without id: {r.status_code}"
@@ -105,4 +105,19 @@ class UserRegistration(HttpUser):
                     r.failure(failstr)
                 self.interrupt()
           
-                   
+    @task(1)
+    class GetUser(TaskSet):
+        @task(1)
+        @tag('correct', 'get', '200')
+        def get_user_200(self):
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            r = self.client.get(f"/oauth2/user/{user.userId}", verify=False, allow_redirects=False)
+            if r.status_code == 200:
+                logging.info(f"Got user: {user!r}")
+            else:
+                logging.info(f'user get did not return code 200. Instead: {r.status_code}')
+            self.interrupt()                  
