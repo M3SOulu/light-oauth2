@@ -235,7 +235,7 @@ class ClientRegistration(HttpUser):
             except KeyError:
                 #logging.info("No clients available to update")
                 self.interrupt()
-            c2 = replace(c, ownerid="nouser")
+            c2 = replace(c, ownerId="nouser")
             with self.client.put("/oauth2/client", json=c2.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
