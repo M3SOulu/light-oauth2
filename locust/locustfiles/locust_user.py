@@ -32,4 +32,27 @@ class User:
 
 
 class UserRegistration(HttpUser):
-    pass
+
+    fixed_count = 1
+    host = 'https://localhost:6885'
+
+    @task(1)
+    class RegisterUser(TaskSet):
+
+        @task(1)
+        @tag('correct', 'register', '200')
+        def register_user_200(self):
+            user = User()
+            with self.client.post("/oauth2/user", data=user.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
+
+                if r.status_code == 200:
+                    logging.info(f"Registered user: {user!r}")
+                    USERS.add(user)
+                    r.success()
+                else:
+                    del user
+                    logging.info("User registration did not return code 200")
+                    r.failure("User registration did not return code 200")
+                self.interrupt()
