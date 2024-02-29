@@ -18,10 +18,10 @@ class Client:
     clientSecret: str = field(repr=False, hash=False)
     clientName: str = field(default_factory=lambda: str(uuid4())[:32], repr=False, hash=False)
     clientDesc: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
-    clientProfile: str = field(default="mobile", repr=False, hash=False) # TODO put different if important?
-    clientType: str = field(default="public", repr=False, hash=False) # TODO implement different types for different auth flows
+    clientProfile: str = field(default="mobile", repr=True, hash=False) # TODO put different if important?
+    clientType: str = field(default="public", repr=True, hash=False) # TODO implement different types for different auth flows
     scope: str = field(default="read write", repr=True, hash=False) # TODO implement different scopes
-    ownerId: str = field(default="admin", repr=False, hash=False) # TODO implement different users
+    ownerId: str = field(default="admin", repr=True, hash=False) # TODO implement different users
     host: str = field(default="lightapi.net", repr=False, hash=False)
     redirectUri: str = field(default="http://localhost:8000/authorization", repr=False, hash=False)
     endpoints: list[str] = field(default_factory=list, repr=False, hash=False)
@@ -87,7 +87,7 @@ class ClientRegistration(HttpUser):
                 c = CLIENTS.pop()
                 CLIENTS.add(c)
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             c2 = replace(c, clientType="none")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
                                   verify=False, allow_redirects=False,
@@ -110,7 +110,7 @@ class ClientRegistration(HttpUser):
                 c = CLIENTS.pop()
                 CLIENTS.add(c)
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             c2 = replace(c, clientProfile="none")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
                                   verify=False, allow_redirects=False,
@@ -133,7 +133,7 @@ class ClientRegistration(HttpUser):
                 c = CLIENTS.pop()
                 CLIENTS.add(c)
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             c2 = replace(c, ownerId="nouser")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
                                   verify=False, allow_redirects=False,
@@ -209,7 +209,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.pop()
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             r = self.client.delete(f"/oauth2/client/{c.clientId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
                 logging.info(f"Deleted client: {c!r}")
@@ -241,7 +241,7 @@ class ClientRegistration(HttpUser):
                 c = CLIENTS.pop()
                 CLIENTS.add(c)
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             r = self.client.get(f"/oauth2/client/{c.clientId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
                 logging.info(f"Got client: {c!r}")

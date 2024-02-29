@@ -203,7 +203,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.pop()
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             r = self.client.delete(f"/oauth2/service/{service.serviceId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
                 logging.info(f"Deleted service: {service!r}")
@@ -236,7 +236,7 @@ class ServiceRegistration(HttpUser):
                 service = SERVICES.pop()
                 SERVICES.add(service)
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
             r = self.client.get(f"/oauth2/service/{service.serviceId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
                 logging.info(f"Got service: {service!r}")

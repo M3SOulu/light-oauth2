@@ -49,7 +49,7 @@ class OAuthUser(HttpUser):
             try:
                 self.user.cl = CLIENTS.pop()
             except KeyError:
-                raise RescheduleTask()
+                self.interrupt()
 
         @task
         def access_code(self):
