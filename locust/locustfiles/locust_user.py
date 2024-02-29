@@ -56,3 +56,33 @@ class UserRegistration(HttpUser):
                     logging.info(f"User registration did not return code 200, instead {r.status_code}, {r.text}")
                     r.failure("User registration did not return code 200")
                 self.interrupt()
+
+    @task(1)
+    class UpdateService(TaskSet):
+        @task(1)
+        @tag('correct', 'update', '200')
+        def update_user_200(self):
+            try:
+                user = User().pop()
+                User.add(user)
+            except KeyError:
+                  self.interrupt
+            userupdate = replace(user, userId=user.userId)
+            with self.client.put("/oauth2/user", data=userupdate.to_dict(),
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
+
+                if r.status_code == 200:
+                     USERS.add(userupdate)
+                     logging.info(f"updated user: {userupdate!r}")
+                     del user
+                     r.success()
+                else:
+                     del userupdate
+                     logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
+                     r.failure(f"User updation did not return code 200", {r.status_code})
+                self.interrupt()
+
+
+          
+                   
