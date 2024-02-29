@@ -193,7 +193,7 @@ class ClientRegistration(HttpUser):
                     logging.info(f"Client update with wrong clientType failed as expected, 400")
                     r.success()
                 else:
-                    failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
+                    failstr = str(f"Unexpected status code when updating client with wrong clientType: {r.status_code}")
                     logging.info(failstr)
                     r.failure(failstr)
                     if r.status_code == 200:
@@ -218,7 +218,7 @@ class ClientRegistration(HttpUser):
                     logging.info(f"Client update with wrong clientProfile failed as expected, 400")
                     r.success()
                 else:
-                    failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
+                    failstr = str(f"Unexpected status code when updating client with wrong clientProfile: {r.status_code}")
                     logging.info(failstr)
                     r.failure(failstr)
                     if r.status_code == 200:
