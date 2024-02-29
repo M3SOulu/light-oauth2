@@ -150,50 +150,55 @@ class ClientRegistration(HttpUser):
 
 ### Update client start
     @task(1)
-    @tag('correct', 'update', '200')
-    def update_client_200(self):
-        try:
-            c = CLIENTS.pop()
-        except KeyError:
-            #logging.info("No clients available to update")
-            raise RescheduleTask()
-        c2 = replace(c, clientName=str(uuid4())[:32])
+    class UpdateClient(TaskSet):
 
-        with self.client.put("/oauth2/client", json=c2.to_dict(),
-                             verify=False, allow_redirects=False,
-                             catch_response=True) as r:
-            if r.status_code == 200:
-                logging.info(f"Updated client: {c2!r}")
-                CLIENTS.add(c2)
-                del c
-                r.success()
-            else:
+        @task(1)
+        @tag('correct', 'update', '200')
+        def update_client_200(self):
+            try:
+                c = CLIENTS.pop()
+            except KeyError:
+                #logging.info("No clients available to update")
+                self.interrupt()
+            c2 = replace(c, clientName=str(uuid4())[:32])
+
+            with self.client.put("/oauth2/client", json=c2.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"Updated client: {c2!r}")
+                    CLIENTS.add(c2)
+                    del c
+                    r.success()
+                else:
+                    CLIENTS.add(c)
+                    del c2
+                    logging.info(f"Client update failed with unexpected status code: {r.status_code}")
+                    r.failure(f"Client update failed with unexpected status code: {r.status_code}")
+                self.interrupt()
+
+        @task(1)
+        @tag('error', 'update', '404')
+        def update_client_404(self):
+            try:
+                c = CLIENTS.pop()
                 CLIENTS.add(c)
-                del c2
-                logging.info(f"Client update failed with unexpected status code: {r.status_code}")
-                r.failure(f"Client update failed with unexpected status code: {r.status_code}")
+            except KeyError:
+                #logging.info("No clients available to update")
+                self.interrupt()
+            c2 = replace(c, clientId="", clientName=str(uuid4())[:32])
 
-    @task(1)
-    @tag('error', 'update', '404')
-    def update_client_404(self):
-        try:
-            c = CLIENTS.pop()
-            CLIENTS.add(c)
-        except KeyError:
-            #logging.info("No clients available to update")
-            raise RescheduleTask()
-        c2 = replace(c, clientId="", clientName=str(uuid4())[:32])
-
-        with self.client.put("/oauth2/client", json=c2.to_dict(),
-                             verify=False, allow_redirects=False,
-                             catch_response=True) as r:
-            if r.status_code == 404:
-                logging.info(f"Client update without id failed as expected, 404")
-                r.success()
-            else:
-                failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
-                logging.info(failstr)
-                r.failure(failstr)
+            with self.client.put("/oauth2/client", json=c2.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info(f"Client update without id failed as expected, 404")
+                    r.success()
+                else:
+                    failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
+                    logging.info(failstr)
+                    r.failure(failstr)
+                self.interrupt()
 ### Update client end
 
     @task(1)
