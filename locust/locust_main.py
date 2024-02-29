@@ -1,0 +1,1 @@
+from locustfiles import ServiceRegistration, ClientRegistration, OAuthUser

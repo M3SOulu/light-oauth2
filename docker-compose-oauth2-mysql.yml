@@ -1,0 +1,192 @@
+  version: '2'
+  services:
+    mysqldb:
+      image: mysql:5.7.16
+      ports:
+        - 3306:3306
+      volumes:
+        - ./light-oauth2/mysql:/docker-entrypoint-initdb.d
+      networks:
+        - localnet
+      environment:
+        MYSQL_ROOT_PASSWORD: rootpassword
+        MYSQL_USER: mysqluser
+        MYSQL_PASSWORD: mysqlpw
+    oauth2-code:
+      image: networknt/oauth2-code:2.0.28
+      ports:
+        - "6881:6881"
+      volumes:
+        - ./light-oauth2/mysql/config/oauth2-code:/config
+      networks:
+        - localnet
+      depends_on:
+        - mysqldb
+      links:
+        - mysqldb
+      logging:
+        driver: "gelf"
+        options:
+          gelf-address: "udp://localhost:12201"
+          tag: "oauth2-code"
+          env: "dev"
+    oauth2-token:
+      image: networknt/oauth2-token:2.0.28
+      ports:
+        - "6882:6882"
+      volumes:
+        - ./light-oauth2/mysql/config/oauth2-token:/config
+      networks:
+        - localnet
+      depends_on:
+        - mysqldb
+      links:
+        - mysqldb
+      logging:
+        driver: "gelf"
+        options:
+          gelf-address: "udp://localhost:12201"
+          tag: "oauth2-token"
+          env: "dev"
+    oauth2-service:
+      image: networknt/oauth2-service:2.0.28
+      ports:
+        - "6883:6883"
+      volumes:
+        - ./light-oauth2/mysql/config/oauth2-service:/config
+      networks:
+        - localnet
+      depends_on:
+        - mysqldb
+      links:
+        - mysqldb
+      logging:
+        driver: "gelf"
+        options:
+          gelf-address: "udp://localhost:12201"
+          tag: "oauth2-service"
+          env: "dev"
+    oauth2-client:
+      image: networknt/oauth2-client:2.0.28
+      ports:
+        - "6884:6884"
+      volumes:
+        - ./light-oauth2/mysql/config/oauth2-client:/config
+      networks:
+        - localnet
+      depends_on:
+        - mysqldb
+      links:
+        - mysqldb
+      logging:
+        driver: "gelf"
+        options:
+          gelf-address: "udp://localhost:12201"
+          tag: "oauth2-client"
+          env: "dev"
+    oauth2-user:
+      image: networknt/oauth2-user:2.0.28
+      ports:
+        - "6885:6885"
+      volumes:
+        - ./light-oauth2/mysql/config/oauth2-user:/config
+      networks:
+        - localnet
+      depends_on:
+        - mysqldb
+      links:
+        - mysqldb
+      logging:
+        driver: "gelf"
+        options:
+          gelf-address: "udp://localhost:12201"
+          tag: "oauth2-user"
+          env: "dev"
+    oauth2-key:
+      image: networknt/oauth2-key:2.0.28
+      ports:
+        - "6886:6886"
+      volumes:
+        - ./light-oauth2/mysql/config/oauth2-key:/config
+      networks:
+        - localnet
+      depends_on:
+        - mysqldb
+      links:
+        - mysqldb
+      logging:
+        driver: "gelf"
+        options:
+          gelf-address: "udp://localhost:12201"
+          tag: "oauth2-key"
+          env: "dev"
+    oauth2-refresh-token:
+      image: networknt/oauth2-refresh-token:2.0.28
+      ports:
+        - "6887:6887"
+      volumes:
+        - ./light-oauth2/mysql/config/oauth2-refresh-token:/config
+      networks:
+        - localnet
+      depends_on:
+        - mysqldb
+      links:
+        - mysqldb
+      logging:
+        driver: "gelf"
+        options:
+          gelf-address: "udp://localhost:12201"
+          tag: "oauth2-refresh-token"
+          env: "dev"
+    #elasticsearch:
+    #  image: docker.elastic.co/elasticsearch/elasticsearch:7.8.1
+    #  environment:
+    #    - discovery.type=single-node
+    #  ports:
+    #    - 9200:9200
+    #  volumes:
+    #    - /home/jnyyssol/light-docker/elasticsearch-data:/usr/share/elasticsearch/data
+    #kibana:
+    #  image: docker.elastic.co/kibana/kibana:7.8.1
+    #  ports:
+    #    - 5601:5601
+    #  depends_on:
+    #    - elasticsearch
+    logstash:
+      build: logstash/
+      command: -f /etc/logstash/conf.d/
+      volumes:
+        - ./logstash/logs:/var/log/logstash/
+      ports:
+        - "12201:12201/udp"
+      environment:
+        - LS_HEAP_SIZE=2048m
+
+    prometheus:
+      image: prom/prometheus:latest
+      volumes:
+        - ./prometheus.yml:/etc/prometheus/prometheus.yml
+        - ./prometheus_rules.yml:/etc/prometheus/prometheus_rules.yml
+      command:
+        - '--config.file=/etc/prometheus/prometheus.yml'
+      ports:
+        - 9090:9090
+
+    node_exporter:
+      image: prom/node-exporter:latest
+      volumes:
+        - /proc:/host/proc:ro
+        - /sys:/host/sys:ro
+        - /:/rootfs:ro
+      command:
+        - '--path.procfs=/host/proc'
+        - '--path.sysfs=/host/sys'
+        - '--path.rootfs=/rootfs'
+        - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      ports:
+        - 9100:9100
+
+
+  networks:
+    localnet:
+      external: true

@@ -1,3 +1,173 @@
+# light-docker
+Configured ELK stack to run with OAuth2 MySQL. Run with:
+
+```
+docker compose -f docker-compose-oauth2-mysql.yml up
+```
+
+Kibana available at http://localhost:5601/
+
+For other dockerfiles and more documentation, see original repo: https://github.com/networknt/light-docker
+
+# light-oauth2 services, endpoints and response codes TODO list
+
+- [ ] `oauth2-service` *handle service database*
+    - [x] `/oauth2/service@post` *register new service*
+         - [x] 200 *correct*
+         - [x] 404 *user not found*
+    - [x] `/oauth2/service@put` *update existing service*
+         - [x] 200 *correct*
+         - [x] 404 *user not found*
+         - [x] 404 *`serviceId` not found*
+    - [x] `/oauth2/service@get` *get services from database*
+        - [x] 200 *correct*
+        - [x] 400 *`page` parameter missing*
+    - [x] `/oauth2/service{serviceId}@delete` *delete a service*
+         - [x] 200 *correct*
+         - [x] 404 *`serviceId` not found*
+    - [x] `/oauth2/service{serviceId}@get` *get a service from database*
+         - [x] 200 *correct*
+         - [x] 404 *`serviceId` not found*
+    - [ ] `/oauth2/service/{serviceId}/endpoint@post` *add endpoints to service*
+         - [ ] 200 *correct*
+         - [ ] 404 *`serviceId` not found*
+    - [ ] `/oauth2/service/{serviceId}/endpoint@delete` *delete endpoints of a service*
+         - [ ] 200 *correct*
+         - [ ] 404 *`serviceId` not found*
+    - [ ]  `/oauth2/service/{serviceId}/endpoint@get` *get endpoints of a service*
+         - [ ] 200 *correct*
+         - [ ] 404 *`serviceId` not found*
+- [ ] `oauth2-client` *handle client database*
+    - [x] `/oauth2/client@post` *register new client*
+        - [x] 200 *correct*
+        - [x] 400 *`clientId` already exists*
+        - [x] 400 *`clientType` has illegal value*
+        - [x] 400 *`clientProfile` has illegal value*
+        - [x] 404 *user not found*
+    - [x] `/oauth2/client@put` *update existing client*
+        - [x] 200 *correct*
+        - [x] 404 *`clientId` not found*
+        - [ ] 400 *`clientType` has illegal value*
+        - [ ] 400 *`clientProfile` has illegal value*
+        - [ ] 404 *user not found*
+    - [x] `/oauth2/client@get` *get clients from database*
+         - [x] 200 *correct*
+         - [x] 400 *`page` parameter missing*
+    - [x] `/oauth2/client/{clientId}@get` *get a client from database*
+         - [x] 200 *correct*
+         - [x] 404 *`serviceId` not found*
+    - [x] `/oauth2/client/{clientId}@delete` *delete a client from database*
+         - [x] 200 *correct*
+         - [x] 404 *`serviceId` not found*
+    - [ ] `/oauth2/client/{clientId}/service/{serviceId}@post` *link an endpoint to a client*
+         - [ ] 200 *correct*
+         - [ ] 404 *`clientId` not found*
+         - [ ] 404 *`serviceId` not found*
+    - [ ] `/oauth2/client/{clientId}/service/{serviceId}@delete` *delete linked endpoints of a client*
+         - [ ] 200 *correct*
+         - [ ] 404 *`clientId` not found*
+         - [ ] 404 *`serviceId` not found*
+    - [ ]  `/oauth2/client/{clientId}/service/{serviceId}@get` *get endpoints linked to a client*
+         - [ ] 200 *correct*
+         - [ ] 404 *`clientId` not found*
+         - [ ] 404 *`serviceId` not found*
+    - [ ] `/oauth2/client/{clientId}/service@get` *get all endpoints linked to a client*
+        - [ ] 200 *correct*
+        - [ ] 404 *`clientId` not found*
+    - [ ] `/oauth2/client/{clientId}/service@delete` *delete all endpoints linked to a client*
+        - [ ] 200 *correct*
+        - [ ] 404 *`clientId` not found*
+- [ ] `oauth2-user` *handle user database*
+    - [ ] `/oauth2/user@post` *create new user*
+        - [ ] 200 *correct*
+        - [ ] 400 *`userId` exists*
+        - [ ] 400 *email exists*
+        - [ ] 400 *password confirmation failed*
+        - [ ] 400 *password empty*
+    - [ ] `/oauth2/user@put` *update user*
+        - [ ] 200 *correct*
+        - [ ] 404 *user not found*
+    - [ ] `/oauth2/user@get` *get all users*
+        - [ ] 200 *correct*
+        - [ ] 400 *`page` parameter missing*
+    - [ ] `/oauth2/user/{userId}@get` *get a user*
+        - [ ] 200 *correct*
+        - [ ] 404 *user not found*
+    - [ ] `/oauth2/user/{userId}@delete` *delete a user*
+        - [ ] 200 *correct*
+        - [ ] 404 *user not found*
+    - [ ] `/oauth2/password/{userId}@post` *update password*
+        - [ ] 200 *correct*
+        - [ ] 404 *user not found*
+        - [ ] 401 *incorrect password*
+        - [ ] 400 *password confirmation failed*
+- [ ] `oauth2-code` *authorization code flow*
+  - [ ] `oauth2/code@get` *get authorization code*
+    - [x] 302 *redirect with authorization code*
+    - [ ] 401 *incorrect password*
+    - [ ] 400 *`response_type` missing*
+    - [ ] 400 *`client_id` missing*
+    - [ ] 400 *`response_type` does not equal `code`*
+    - [ ] 404 *`clientId` not found*
+    - [ ] 400 *`PKCE`: invalid code challenge method*
+    - [ ] 400 *`PKCE`: code challenge too short*
+    - [ ] 400 *`PKCE`: code challenge too long*
+    - [ ] 400 *`PKCE`: code challenge invalid format*
+  - [ ] `oauth2/code@post` ?? *same as `get` but credentials are posted?*
+- [ ] `oauth2-token` *access token*
+  - [ ] `oauth2/token@post` *exchange authorization code for access token*
+    - [x] 200 *correct, token issued*
+    - [ ] 400 *unable to parse `x-www-form-urlencoded` form'
+    - [ ] 400 *illegal value for grant type*
+    - [ ] 400 *authorization header missing*
+    - [ ] 404 *`clientId` not found*
+    - [ ] 401 *wrong `client_secret`*
+    - [ ] 401 *authorization form cannot be decoded*
+    - [ ] 401 *basic authorization header missing (bearer token is passed)* 
+    - [ ] 400 *`PKCE`: code verifier too short*
+    - [ ] 400 *`PKCE`: code verifier too long*
+    - [ ] 400 *`PKCE`: code verifier invalid format*
+    - [ ] 400 *`PKCE`: code verifier missing*
+    - [ ] 400 *`PKCE`: verification failed*
+- [ ] `oauth2-refresh-token` *manage refresh tokens*
+  - [ ] `oauth2/refresh_token@get` *get all refresh tokens*
+    - [ ] 200 *correct*
+    - [ ] 400 *`page` parameter missing*
+  - [ ] `oauth2/refresh_token/{refreshToken}@get` *get particular `refresh_token` info*
+    - [ ] 200 *correct*
+    - [ ] 404 *refresh token not found*
+    - [ ] 400 *invalid refresh token*
+  - [ ] `oauth2/refresh_token/{refreshToken}@delete` *delete `refresh_token`*
+      - [ ] 200 *correct*
+      - [ ] 404 *refresh token not found*
+      - [ ] 400 *invalid refresh token*
+- [ ] `oauth2-key` *encryption key exchange*
+    - [ ] `oauth2/key/{keyId}@get` *get public key for JWT verification*
+      - [ ] 200 *correct*
+      - [ ] 401 *missing authorization with client credentials*
+      - [ ] 401 *wrong client secret*
+      - [ ] 404 *`clientId` not found*
+      - [ ] 500 *`keyId `not found on server*
+
+# Pipelines to implement
+
+- [ ] OAuth2 flows
+  - [x] Client credentials flow
+  - [x] Authorization code flow
+  - [ ] Authorization code flow PKCE
+  - [ ] Resource owner password flow
+  - [ ] Refresh token flow
+- [ ] Scope management
+  - [ ] Linking endpoints to clients
+  - [ ] Scope parameter in code/token requests
+- [ ] Different values of
+  - [ ] Service type
+  - [ ] Client type
+  - [ ] Client profile
+  - [ ] User type
+
+
+# Original readme
 A fast, light weight and cloud native OAuth 2.0 Server based on microservices architecture 
 built on top of light-4j and light-rest-4j frameworks. 
 
