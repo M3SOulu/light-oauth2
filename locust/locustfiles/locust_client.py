@@ -176,6 +176,30 @@ class ClientRegistration(HttpUser):
                     logging.info(f"Client update failed with unexpected status code: {r.status_code}")
                     r.failure(f"Client update failed with unexpected status code: {r.status_code}")
                 self.interrupt()
+        @task(1)
+        @tag('error', 'update', '400')
+        def update_client_400_clientType(self):
+            try:
+                c = CLIENTS.pop()
+                CLIENTS.add(c)
+            except KeyError:
+                #logging.info("No clients available to update")
+                self.interrupt()
+            c2 = replace(c, clientType="none")
+            with self.client.put("/oauth2/client", json=c2.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info(f"Client update with wrong clientType failed as expected, 400")
+                    r.success()
+                else:
+                    failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
+                    logging.info(failstr)
+                    r.failure(failstr)
+                    if r.status_code == 200:
+                        CLIENTS.discard(c)
+                del c2
+                self.interrupt()
 
         @task(1)
         @tag('error', 'update', '404')
