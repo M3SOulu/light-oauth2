@@ -87,9 +87,9 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] `/oauth2/user@put` *update user*
         - [x] 200 *correct*
         - [x] 404 *user not found*
-    - [ ] `/oauth2/user@get` *get all users*
-        - [ ] 200 *correct*
-        - [ ] 400 *`page` parameter missing*
+    - [x] `/oauth2/user@get` *get all users*
+        - [x] 200 *correct*
+        - [x] 400 *`page` parameter missing*
     - [x] `/oauth2/user/{userId}@get` *get a user*
         - [x] 200 *correct*
         - [x] 404 *user not found*
