@@ -56,6 +56,26 @@ class UserRegistration(HttpUser):
                     logging.info(f"User registration did not return code 200, instead {r.status_code}, {r.text}")
                     r.failure("User registration did not return code 200")
                 self.interrupt()
+        @task(1)
+        @tag('error', 'register', '400')
+        def register_user_id_exists(self):
+            if USERS:
+                existing_user = next(iter(USERS))
+                with self.client.post("/oauth2/user", data=existing_user.to_dict(),
+                              verify=False, allow_redirects=False,
+                              catch_response=True) as response:
+
+                    if response.status_code == 400:
+                        logging.info(f"User already exists: {existing_user!r}")
+                        response.success()
+                    else:
+                        logging.error(f"User already exists, registration is not possible, received code {response.status_code}, {response.text}")
+                        response.failure("User already exists, registration is not possible")
+                    self.interrupt()
+            else:
+                logging.warning("No existing users to test duplicate registration.")
+                self.interrupt(reschedule=False)
+
 
     @task(1)
     class UpdateUser(TaskSet):
