@@ -162,3 +162,36 @@ class UserRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
+
+
+    @task(1)
+    class DeleteUser(TaskSet):            
+        @task(1)
+        @tag('correct', 'delete', '200')
+        def delete_user_200(self):
+            try:
+                user = USERS.pop()
+            except KeyError:
+                self.interrupt()
+            r = self.client.delete(f"/oauth2/user/{user.userId}", verify=False, allow_redirects=False)
+            if r.status_code == 200:
+                logging.info(f"Deleted user: {user!r}")
+                del user
+            else:
+                logging.info('user deletion did not return code 200')
+                USERS.add(user)
+            self.interrupt()
+
+        @task(1)
+        @tag('error', 'get', '404')
+        def get_user_404(self):
+            with self.client.get(f"/oauth2/user/none", verify=False,
+                                 allow_redirects=False, catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info("Tried to get the user with bad id, status 404 as expected.")
+                    r.success()
+                else:
+                    failure_str = f'Get user with bad id got unexpected status code {r.status_code}'
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
