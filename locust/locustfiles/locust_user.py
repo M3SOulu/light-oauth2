@@ -135,3 +135,30 @@ class UserRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
+
+    @task(1)
+    class GetUserPage(TaskSet):
+        @task(1)
+        @tag('correct', 'get', '200')
+        def get_user_page_200(self):
+            r = self.client.get(f"/oauth2/user", params={'page': '1'}, verify=False, allow_redirects=False)
+            if r.status_code == 200:
+                logging.info(f"Got user page with status_code 200.")
+            else:
+                logging.info(f'user page get did not return code 200. Instead: {r.status_code}')
+            self.interrupt()
+
+        @task(1)
+        @tag('error', 'get', '400')
+        def get_user_page_400(self):
+            with self.client.get("/oauth2/user", params={},
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 400:
+                    logging.info("Called user page without page, status 400 as expected.")
+                    r.success()
+                else:
+                    failure_str = f"user page get did not return code 400. Instead: {r.status_code}"
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
