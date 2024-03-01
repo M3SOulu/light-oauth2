@@ -70,7 +70,6 @@ class UserRegistration(HttpUser):
             with self.client.put("/oauth2/user", data=userupdate.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
-
                 if r.status_code == 200:
                      USERS.add(userupdate)
                      logging.info(f"updated user: {userupdate!r}")
