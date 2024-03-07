@@ -56,23 +56,24 @@ class UserRegistration(HttpUser):
                     logging.info(f"User registration did not return code 200, instead {r.status_code}, {r.text}")
                     r.failure("User registration did not return code 200")
                 self.interrupt()
-
+                
         @task(1)
         @tag('error', 'register', '400')
         def register_user_400_no_password(self):
-            user = User(password="")
-            with self.client.post("/oauth2/user", data=user.to_dict(),
-                                  verify=False, allow_redirects=False,
-                                  catch_response=True) as r:
+            user = User(password="")  
+            with self.client.post("/oauth2/user", json=user.to_dict(),  
+                          verify=False, allow_redirects=False,
+                          catch_response=True) as r:
 
                 if r.status_code == 400:
-                    logging.info(f"User Registration: error code 400 returned as expected (wrong password)")
+                    logging.info("User Registration: error code 400 returned as expected for empty password.")
                     r.success()
                 else:
-                    failure_str = f"User Registration: did not return code 400 (password). Instead: {r.status_code}"
+                    failure_str = f"User Registration: did not return code 400 for empty password. Instead: Received {r.status_code} with response: {r.text}"
                     logging.info(failure_str)
                     r.failure(failure_str)
                 self.interrupt()
+
 
     @task(1)
     class UpdateUser(TaskSet):
