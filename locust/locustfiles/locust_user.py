@@ -74,7 +74,7 @@ class UserRegistration(HttpUser):
                     logging.info(f"password is empty as expected, 400")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when updating user without id: {r.status_code}"
+                    failstr = f"Unexpected status code when registering user without password: {r.status_code}"
                     logging.info(failstr)
                     r.failure(failstr)
                 self.interrupt()
@@ -109,13 +109,13 @@ class UserRegistration(HttpUser):
         @tag('error', 'update', '404')
         def update_user_404(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                u = USERS.pop()
+                USERS.add(u)
             except KeyError:
                 self.interrupt()
-            userupdate = replace(user, userId="")
+            u2 = replace(u, userId="")
 
-            with self.client.put("/oauth2/user", json=userupdate.to_dict(),
+            with self.client.put("/oauth2/user", json=u2.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
