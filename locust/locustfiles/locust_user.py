@@ -204,14 +204,14 @@ class UserRegistration(HttpUser):
 
         @task(1)
         @tag('error', 'get', '404')
-        def get_user_404(self):
-            with self.client.get(f"/oauth2/user/none", verify=False,
+        def delete_user_404(self):
+            with self.client.delete(f"/oauth2/user/none", verify=False,
                                  allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.info("Tried to get the user with bad id, status 404 as expected.")
+                    logging.info("Tried to delete the user with bad id, status 404 as expected.")
                     r.success()
                 else:
-                    failure_str = f'Get user with bad id got unexpected status code {r.status_code}'
+                    failure_str = f'delete user with bad id got unexpected status code {r.status_code}'
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
