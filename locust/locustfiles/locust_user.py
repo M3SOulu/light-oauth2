@@ -60,7 +60,7 @@ class UserRegistration(HttpUser):
         @task(1)
         @tag('error', 'register', '400')
         def register_user_400_no_password(self):
-            user = User(password="none")
+            user = User(password="")
             with self.client.post("/oauth2/user", data=user.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
