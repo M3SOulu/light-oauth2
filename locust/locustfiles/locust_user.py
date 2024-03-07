@@ -87,7 +87,7 @@ class UserRegistration(HttpUser):
                 USERS.add(user) 
             except KeyError:
                 self.interrupt()  
-            existing_id = ''
+            existing_id = 'fb437692'
             userupdate = replace(user,id=existing_id)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
