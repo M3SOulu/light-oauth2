@@ -86,47 +86,45 @@ class UserRegistration(HttpUser):
         @tag('correct', 'update', '200')
         def update_user_200(self):
             try:
-                u = USERS.pop()
+                user = USERS.pop()
             except KeyError:
                   self.interrupt
-            u2 = replace(u, firstName=str(uuid4())[:32], userType= "admin")
-            with self.client.put("/oauth2/user", data=u2.to_dict(),
+            userupdate = replace(user, userId=user.userId)
+            with self.client.put("/oauth2/user", data=userupdate.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 200:
-                     USERS.add(u2)
-                     logging.info(f"updated user: {u2!r}")
-                     del u
+                     USERS.add(userupdate)
+                     logging.info(f"updated user: {userupdate!r}")
+                     del user
                      r.success()
                 else:
-                     USERS.add(u)
-                     del u2
+                     USERS.add(user)
+                     del userupdate
                      logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
                      r.failure(f"User updation did not return code 200", {r.status_code})
                 self.interrupt()
-
         @task(1)
         @tag('error', 'update', '404')
         def update_user_404(self):
             try:
-                u = USERS.pop()
-                USERS.add(u)
+                user = USERS.pop()
+                USERS.add(user)
             except KeyError:
                 self.interrupt()
-            u2 = replace(u, userId="")
-
-            with self.client.put("/oauth2/user", json=u2.to_dict(),
+            userupdate = replace(user, userId="")
+            with self.client.put("/oauth2/user", json=userupdate.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
-                if r.status_code == 400:
-                    logging.info(f"User update without id failed as expected, 400")
+                if r.status_code == 404:
+                    logging.info(f"User update without id failed as expected, 404")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when updating user without id: {r.status_code}"
                     logging.info(failstr)
                     r.failure(failstr)
                 self.interrupt()
-          
+                
     @task(1)
     class GetUser(TaskSet):
         @task(1)
