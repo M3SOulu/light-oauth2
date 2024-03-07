@@ -79,23 +79,22 @@ class UserRegistration(HttpUser):
         @task(1)
         @tag('correct', 'update', '200')
         def update_user_200(self):
-            user = None
             try:
-                user = USERS.pop()
+                u = USERS.pop()
             except KeyError:
                   self.interrupt
-            userupdate = replace(user, userId=user.userId, userType= "admin")
+            u2 = replace(u, userId=user.userId, userType= "admin")
             with self.client.put("/oauth2/user", data=userupdate.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 200:
-                     USERS.add(userupdate)
-                     logging.info(f"updated user: {userupdate!r}")
-                     del user
+                     USERS.add(u2)
+                     logging.info(f"updated user: {u2!r}")
+                     del u
                      r.success()
                 else:
-                     USERS.add(user)
-                     del userupdate
+                     USERS.add(u)
+                     del u2
                      logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
                      r.failure(f"User updation did not return code 200", {r.status_code})
                 self.interrupt()
@@ -212,23 +211,3 @@ class UserRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
-
-
-    @task(1)
-    class UpdatePassword(TaskSet):
-        @task(1)
-        @tag('correct', 'update', '200')
-        def update_password_200(self):
-            try:
-                user = USERS.pop()
-            except KeyError:
-                self.interrupt()
-            r = self.client.post(f"/oauth2/password/{user.userId}", verify=False, allow_redirects=False)
-            if r.status_code == 200:
-                user = replace(user, password=str(uuid4()))
-                logging.info(f"password updated: {user!r}")
-            else:
-                logging.info(f'password update did not return code 200. Instead: {r.status_code}')
-            self.interrupt()                  
-
-      
