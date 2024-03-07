@@ -83,7 +83,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
         - [ ] 400 *`userId` exists*
         - [ ] 400 *email exists*
         - [ ] 400 *password confirmation failed*
-        - [ ] 400 *password empty*
+        - [x] 400 *password empty*
     - [x] `/oauth2/user@put` *update user*
         - [x] 200 *correct*
         - [x] 404 *user not found*
