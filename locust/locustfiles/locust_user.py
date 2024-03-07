@@ -103,7 +103,6 @@ class UserRegistration(HttpUser):
         @task(1)
         @tag('error', 'update', '404')
         def update_user_404(self):
-            user = None
             try:
                 user = USERS.pop()
                 USERS.add(user)
@@ -213,3 +212,23 @@ class UserRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
             self.interrupt()
+
+
+    @task(1)
+    class UpdatePassword(TaskSet):
+        @task(1)
+        @tag('correct', 'get', '200')
+        def update_password_200(self):
+            try:
+                user = USERS.pop()
+            except KeyError:
+                self.interrupt()
+            user2 = replace(user, password=str(uuid4()))
+            r = self.client.get(f"/oauth2/password/{user.userId}", verify=False, allow_redirects=False)
+            if r.status_code == 200:
+                logging.info(f"password updated: {user!r}")
+            else:
+                logging.info(f'user get did not return code 200. Instead: {r.status_code}')
+            self.interrupt()                  
+
+      
