@@ -57,7 +57,7 @@ class UserRegistration(HttpUser):
                     r.failure("User registration did not return code 200")
                 self.interrupt()
 
-        @task(1)
+        @task(1) #Comment DeleteUser class before using this function, so it doesn't delete the existing users
         @tag('error', 'register', '400')
         def register_user_400_user_exists(self):
             try:
@@ -71,7 +71,7 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.info(f"userId exists as expected, 400")
+                    logging.info(f"UserId exists as expected, 400")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when registering user with existing userId: {r.status_code}"
@@ -79,6 +79,28 @@ class UserRegistration(HttpUser):
                     r.failure(failstr)
                 self.interrupt()
                 
+        @task(1) #Comment DeleteUser function before using this function, so it doesn't delete the existing users
+        @tag('error', 'register', '400')
+        def register_user_400_email_exists(self):
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            userupdate = replace(user, email="feb76d84")
+
+            with self.client.post("/oauth2/user", json=userupdate.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 400:
+                    logging.info(f"email already exists as expected, 400")
+                    r.success()
+                else:
+                    failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
+                    logging.info(failstr)
+                    r.failure(failstr)
+                self.interrupt()
+
         @task(1)
         @tag('error', 'register', '400')
         def register_user_400_no_password(self):

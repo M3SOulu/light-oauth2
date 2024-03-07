@@ -81,7 +81,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [ ] `/oauth2/user@post` *create new user*
         - [x] 200 *correct*
         - [x] 400 *`userId` exists*
-        - [ ] 400 *email exists*
+        - [x] 400 *email exists*
         - [ ] 400 *password confirmation failed*
         - [x] 400 *password empty*
     - [x] `/oauth2/user@put` *update user*
