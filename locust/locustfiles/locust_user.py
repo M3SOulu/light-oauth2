@@ -60,18 +60,23 @@ class UserRegistration(HttpUser):
         @task(1)
         @tag('error', 'register', '400')
         def register_user_400_no_password(self):
-            user = User(password="")  
-            with self.client.post("/oauth2/user", json=user.to_dict(),  
-                          verify=False, allow_redirects=False,
-                          catch_response=True) as r:
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            userupdate = replace(user, password="")
 
+            with self.client.post("/oauth2/user", json=userupdate.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.info("User Registration: error code 400 returned as expected for empty password.")
+                    logging.info(f"password is empty as expected, 400")
                     r.success()
                 else:
-                    failure_str = f"User Registration: did not return code 400 for empty password. Instead: Received {r.status_code} with response: {r.text}"
-                    logging.info(failure_str)
-                    r.failure(failure_str)
+                    failstr = f"Unexpected status code when updating user without id: {r.status_code}"
+                    logging.info(failstr)
+                    r.failure(failstr)
                 self.interrupt()
 
 
