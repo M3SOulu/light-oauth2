@@ -79,7 +79,7 @@ class UserRegistration(HttpUser):
                     r.failure(failstr)
                 self.interrupt()
                 
-        @task(1) #Comment DeleteUser function before using this function, so it doesn't delete the existing users
+        @task(1) #Comment DeleteUser class before using this function, so it doesn't delete the existing users
         @tag('error', 'register', '400')
         def register_user_400_email_exists(self):
             try:
