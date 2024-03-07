@@ -112,8 +112,8 @@ class UserRegistration(HttpUser):
             with self.client.put("/oauth2/user", json=userupdate.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
-                if r.status_code == 404:
-                    logging.info(f"User update without id failed as expected, 404")
+                if r.status_code == 400:
+                    logging.info(f"User update without id failed as expected, 400")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when updating user without id: {r.status_code}"
