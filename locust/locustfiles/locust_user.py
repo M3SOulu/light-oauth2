@@ -88,7 +88,7 @@ class UserRegistration(HttpUser):
             except KeyError:
                 self.interrupt()  
             existing_id = 'fe8ce576'
-            if existing_id in [user.userId for user in USERS]
+            if existing_id in [user.userId for user in USERS]:
                 logging.info(f"User ID {existing_id} already exists.")
             else:
                 self.interrupt()
