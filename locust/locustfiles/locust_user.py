@@ -83,8 +83,8 @@ class UserRegistration(HttpUser):
                 u = USERS.pop()
             except KeyError:
                   self.interrupt
-            u2 = replace(u, userId=user.userId, userType= "admin")
-            with self.client.put("/oauth2/user", data=userupdate.to_dict(),
+            u2 = replace(u, firstName=str(uuid4())[:32], userType= "admin")
+            with self.client.put("/oauth2/user", data=u2.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 200:
