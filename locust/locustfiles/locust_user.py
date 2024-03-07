@@ -223,9 +223,9 @@ class UserRegistration(HttpUser):
                 user = USERS.pop()
             except KeyError:
                 self.interrupt()
-            user2 = replace(user, password=str(uuid4()))
             r = self.client.post(f"/oauth2/password/{user.userId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
+                user = replace(user, password=str(uuid4()))
                 logging.info(f"password updated: {user!r}")
             else:
                 logging.info(f'password update did not return code 200. Instead: {r.status_code}')
