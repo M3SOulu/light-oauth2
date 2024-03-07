@@ -88,7 +88,7 @@ class UserRegistration(HttpUser):
             except KeyError:
                 self.interrupt()  
             existing_id = 'fb437692'
-            if any(existing_id == user.id for u in USERS):
+            if any(existing_id == user.userId for u in USERS):
                 userupdate = replace(user)
             else:
                 self.interrupt()
