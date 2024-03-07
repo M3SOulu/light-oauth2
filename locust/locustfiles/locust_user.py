@@ -87,13 +87,13 @@ class UserRegistration(HttpUser):
                 USERS.add(user) 
             except KeyError:
                 self.interrupt()  
-            existing_id = 'fb437692'
-            if any(existing_id == user.userId for u in USERS):
-                userupdate = replace(user)
+            existing_id = 'fe8ce576'
+            if existing_id in [user.userId for user in USERS]
+                logging.info(f"User ID {existing_id} already exists.")
             else:
                 self.interrupt()
 
-            with self.client.post("/oauth2/user", json=userupdate.to_dict(),
+            with self.client.post("/oauth2/user", json=existing_id.to_dict(),
                           verify=False, allow_redirects=False,
                           catch_response=True) as r:
                 if r.status_code == 400:
