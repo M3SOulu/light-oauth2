@@ -71,8 +71,8 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.info(f"UserId exists as expected, 400", r.status_code)
-                    r.success()
+                    strsuccess= f"userID alrady exists 400 as expected: {r.status_code}"
+                    logging.info(strsuccess)
                 else:
                     failstr = f"Unexpected status code when registering user with existing userId: {r.status_code}"
                     logging.info(failstr)
