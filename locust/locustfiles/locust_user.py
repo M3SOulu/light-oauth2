@@ -129,11 +129,13 @@ class UserRegistration(HttpUser):
         @task(1)
         @tag('correct', 'update', '200')
         def update_user_200(self):
+            user = None
             try:
                 user = USERS.pop()
             except KeyError:
                   self.interrupt
             userupdate = replace(user, userId=user.userId)
+
             with self.client.put("/oauth2/user", data=userupdate.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
@@ -157,6 +159,7 @@ class UserRegistration(HttpUser):
             except KeyError:
                 self.interrupt()
             userupdate = replace(user, userId="")
+
             with self.client.put("/oauth2/user", json=userupdate.to_dict(),
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
