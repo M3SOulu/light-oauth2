@@ -147,7 +147,7 @@ class UserRegistration(HttpUser):
                      del userupdate
                      logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
                      r.failure(f"User updation did not return code 200", {r.status_code})
-            self.interrupt()
+                self.interrupt()
         @task(1)
         @tag('error', 'update', '404')
         def update_user_404(self):
@@ -167,7 +167,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating user without id: {r.status_code}"
                     logging.info(failstr)
                     r.failure(failstr)
-            self.interrupt()
+                self.interrupt()
                 
     @task(1)
     class GetUser(TaskSet):
@@ -198,7 +198,7 @@ class UserRegistration(HttpUser):
                     failure_str = f'Get user with bad id got unexpected status code {r.status_code}'
                     logging.info(failure_str)
                     r.failure(failure_str)
-            self.interrupt()
+                self.interrupt()
 
     @task(1)
     class GetUserPage(TaskSet):
@@ -225,7 +225,7 @@ class UserRegistration(HttpUser):
                     failure_str = f"user page get did not return code 400. Instead: {r.status_code}"
                     logging.info(failure_str)
                     r.failure(failure_str)
-            self.interrupt()
+                self.interrupt()
 
 
     @task(1)
@@ -258,4 +258,4 @@ class UserRegistration(HttpUser):
                     failure_str = f'delete user with bad id got unexpected status code {r.status_code}'
                     logging.info(failure_str)
                     r.failure(failure_str)
-            self.interrupt()
+                self.interrupt()
