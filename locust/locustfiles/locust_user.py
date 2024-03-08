@@ -133,19 +133,19 @@ class UserRegistration(HttpUser):
                 user = USERS.pop()
             except KeyError:
                   self.interrupt
-            userupdate = replace(user, userId=user.userId)
+            user2 = replace(user, userId=user.userId)
 
-            with self.client.put("/oauth2/user", data=userupdate.to_dict(),
+            with self.client.put("/oauth2/user", data=user2.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 200:
-                     USERS.add(userupdate)
-                     logging.info(f"updated user: {userupdate!r}")
+                     USERS.add(user2)
+                     logging.info(f"updated user: {user2!r}")
                      del user
                      r.success()
                 else:
                      USERS.add(user)
-                     del userupdate
+                     del user2
                      logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
                      r.failure(f"User updation did not return code 200", {r.status_code})
                 self.interrupt()
