@@ -71,8 +71,8 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    strsuccess= f"userID alrady exists 400 as expected: {r.status_code}"
-                    logging.info(strsuccess)
+                    logging.info(f"UserId exists as expected, 400")
+                    r.success()
                 else:
                     failstr = f"Unexpected status code when registering user with existing userId: {r.status_code}"
                     logging.info(failstr)
@@ -93,8 +93,7 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    strsuccess= f"email alrady exists 400 as expected: {r.status_code}"
-                    logging.info(strsuccess)
+                    logging.info(f"email exists already as expected, 400")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
@@ -134,7 +133,7 @@ class UserRegistration(HttpUser):
                 user = USERS.pop()
             except KeyError:
                   self.interrupt
-            userupdate = replace(user, userId=user.userId)
+            userupdate = replace(user, userId=str(uuid4())[:8])
             with self.client.put("/oauth2/user", data=userupdate.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
