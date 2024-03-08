@@ -93,7 +93,8 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.info(f"email exists already as expected, 400", r.status_code)
+                    strsuccess= f"email alrady exists 400 as expected: {r.status_code}"
+                    logging.info(strsuccess)
                     r.success()
                 else:
                     failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
