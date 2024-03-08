@@ -225,7 +225,7 @@ class UserRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'get', '404')
+        @tag('error', 'delete', '404')
         def delete_user_404(self):
             with self.client.delete(f"/oauth2/user/none", verify=False,
                                  allow_redirects=False, catch_response=True) as r:
