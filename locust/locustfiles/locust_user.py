@@ -129,7 +129,6 @@ class UserRegistration(HttpUser):
         @task(1)
         @tag('correct', 'update', '200')
         def update_user_200(self):
-            user = None
             try:
                 user = USERS.pop()
             except KeyError:
