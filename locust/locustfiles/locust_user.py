@@ -79,6 +79,28 @@ class UserRegistration(HttpUser):
                     r.failure(failstr)
                 self.interrupt()
 
+        @task(1) 
+        @tag('error', 'register', '400')
+        def register_user_400_email_exists(self):
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            userupdate = replace(user, email="abc@example.com")
+
+            with self.client.post("/oauth2/user", json=userupdate.to_dict(),
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 400:
+                    logging.info(f"email exists already as expected, 400")
+                    r.success()
+                else:
+                    failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
+                    logging.info(failstr)
+                    r.failure(failstr)
+                self.interrupt()
+
         @task(1)
         @tag('error', 'register', '400')
         def register_user_400_no_password(self):
