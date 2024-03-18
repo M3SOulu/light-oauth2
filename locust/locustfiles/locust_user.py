@@ -257,7 +257,7 @@ class UserRegistration(HttpUser):
                     logging.info("Tried to delete the user with bad id, status 404 as expected.")
                     r.success()
                 else:
-                    failure_str = f'delete user with bad id got unexpected status code {r.status_code}'
+                    failure_str = f'Delete user with bad id got unexpected status code {r.status_code}'
                     logging.info(failure_str)
                     r.failure(failure_str)
                 self.interrupt()
