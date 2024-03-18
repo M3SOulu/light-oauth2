@@ -93,7 +93,7 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.info(f"email exists already as expected, 400")
+                    logging.info(f"Email exists already as expected, 400")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
@@ -115,7 +115,7 @@ class UserRegistration(HttpUser):
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.info(f"password is empty as expected, 400")
+                    logging.info(f"Password is empty as expected, 400")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when registering user without password: {r.status_code}"
@@ -140,7 +140,7 @@ class UserRegistration(HttpUser):
                                   catch_response=True) as r:
                 if r.status_code == 200:
                      USERS.add(user2)
-                     logging.info(f"updated user: {user2!r}")
+                     logging.info(f"Updated user: {user2!r}")
                      del user
                      r.success()
                 else:
