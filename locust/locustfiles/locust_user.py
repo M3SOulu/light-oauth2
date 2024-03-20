@@ -28,6 +28,7 @@ class User:
                 'lastName': self.lastName,
                 'email': self.email,
                 'password': self.password,
+                'newPassword': self.password,
                 'passwordConfirm': self.password}
 
 
@@ -272,7 +273,7 @@ class UserRegistration(HttpUser):
             except KeyError:
                 self.interrupt()
             Pass = {
-            'existingPassword': user.password,  #Existing password
+            'password': user.password,  #Existing password
             'newPassword': 'NewSecurePassword123!',  # New password
             'passwordConfirm': 'NewSecurePassword323!'}  # Confirmation of the new password should not match
         
