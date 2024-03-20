@@ -134,10 +134,7 @@ class UserRegistration(HttpUser):
                 user = USERS.pop()
             except KeyError:
                   self.interrupt
-           # user2 = replace(user, userId=user.userId)
-            user2 = User.copy()
-            user2['userId'] = str(uuid4())[:8]
-
+            user2 = replace(user, userId=user.userId)
             with self.client.put("/oauth2/user", data=user2.to_dict(),
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
@@ -284,6 +281,6 @@ class UserRegistration(HttpUser):
                 logging.info(f" Password confirm not match: {user!r}")
                 del user
             else:
-                logging.info('password confirm did not return code 200')
-                USERS.add(user)
+                failure_str = f"user password confirmation get did not return code 400. Instead: {r.status_code}"
+                logging.info(failure_str)
             self.interrupt()
