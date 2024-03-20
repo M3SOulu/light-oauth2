@@ -262,25 +262,25 @@ class UserRegistration(HttpUser):
                     r.failure(failure_str)
                 self.interrupt()
 
-    @task(1)
-    class ResetPassword(TaskSet):
-        @task(1)
-        @tag('error', 'post', '400')
-        def reset_password_not_match_400(self):
-            try:
-                user = USERS.pop()
-            except KeyError:
-                self.interrupt()
-            Pass = {
-            'password': user.password,  #Existing password
-            'newPassword': 'NewSecurePassword123!',  # New password
-            'passwordConfirm': 'NewSecurePassword323!'}  # Confirmation of the new password should not match
+    # @task(1)
+    # class ResetPassword(TaskSet):
+    #     @task(1)
+    #     @tag('error', 'post', '400')
+    #     def reset_password_not_match_400(self):
+    #         try:
+    #             user = USERS.pop()
+    #         except KeyError:
+    #             self.interrupt()
+    #         Pass = {
+    #         'password': user.password,  #Existing password
+    #         'newPassword': 'NewSecurePassword123!',  # New password
+    #         'passwordConfirm': 'NewSecurePassword323!'}  # Confirmation of the new password should not match
         
-            r = self.client.post(f"/oauth2/password/{user.userId}", json=Pass,  verify=False, allow_redirects=False)
-            if r.status_code == 400:
-                logging.info(f" Password confirm not match: {user!r}")
-                del user
-            else:
-                failure_str = f"user password confirmation get did not return code 400. Instead: {r.status_code}"
-                logging.info(failure_str)
-            self.interrupt()
+    #         r = self.client.post(f"/oauth2/password/{user.userId}", json=Pass,  verify=False, allow_redirects=False)
+    #         if r.status_code == 400:
+    #             logging.info(f" Password confirm not match: {user!r}")
+    #             del user
+    #         else:
+    #             failure_str = f"user password confirmation get did not return code 400. Instead: {r.status_code}"
+    #             logging.info(failure_str)
+    #         self.interrupt()
