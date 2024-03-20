@@ -265,8 +265,8 @@ class UserRegistration(HttpUser):
     @task(1)
     class ResetPassword(TaskSet):
         @task(1)
-        @tag('error', 'post', '404')
-        def reset_password_404(self):
+        @tag('error', 'post', '400')
+        def reset_password_not_match_400(self):
             try:
                 user = USERS.pop()
             except KeyError:
@@ -274,13 +274,13 @@ class UserRegistration(HttpUser):
             Pass = {
             'existingPassword': user.password,  #Existing password
             'newPassword': 'NewSecurePassword123!',  # New password
-            'passwordConfirm': 'NewSecurePassword123!'  # Confirmation of the new password
-        }
+            'passwordConfirm': 'NewSecurePassword323!'}  # Confirmation of the new password should not match
+        
             r = self.client.post(f"/oauth2/password/{user.userId}", json=Pass,  verify=False, allow_redirects=False)
-            if r.status_code == 404:
-                logging.info(f" user not found: {user!r}")
+            if r.status_code == 400:
+                logging.info(f" Password confirm not match: {user!r}")
                 del user
             else:
-                logging.info('password reset did not return code 200')
+                logging.info('password confirm did not return code 200')
                 USERS.add(user)
             self.interrupt()
