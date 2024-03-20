@@ -266,13 +266,13 @@ class UserRegistration(HttpUser):
     class ResetPassword(TaskSet):
         @task(1)
         @tag('error', 'post', '404')
-        def reset_password_200(self):
+        def reset_password_404(self):
             try:
                 user = USERS.pop()
             except KeyError:
                 self.interrupt()
             Pass = {
-            'existingPassword': user.password,  #current password
+            'existingPassword': user.password,  #Existing password
             'newPassword': 'NewSecurePassword123!',  # New password
             'passwordConfirm': 'NewSecurePassword123!'  # Confirmation of the new password
         }
