@@ -135,7 +135,7 @@ class UserRegistration(HttpUser):
             except KeyError:
                   self.interrupt
            # user2 = replace(user, userId=user.userId)
-            user2 = user.copy()
+            user2 = User.copy()
             user2['userId'] = str(uuid4())[:8]
 
             with self.client.put("/oauth2/user", data=user2.to_dict(),
