@@ -261,3 +261,26 @@ class UserRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
                 self.interrupt()
+
+    @task(1)
+    class ResetPassword(TaskSet):
+        @task(1)
+        @tag('error', 'post', '404')
+        def reset_password_200(self):
+            try:
+                user = USERS.pop()
+            except KeyError:
+                self.interrupt()
+            Pass = {
+            'existingPassword': user.password,  #current password
+            'newPassword': 'NewSecurePassword123!',  # New password
+            'passwordConfirm': 'NewSecurePassword123!'  # Confirmation of the new password
+        }
+            r = self.client.post(f"/oauth2/password/{user.userId}", json=Pass,  verify=False, allow_redirects=False)
+            if r.status_code == 404:
+                logging.info(f" user not found: {user!r}")
+                del user
+            else:
+                logging.info('password reset did not return code 200')
+                USERS.add(user)
+            self.interrupt()
