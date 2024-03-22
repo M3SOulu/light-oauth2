@@ -263,10 +263,10 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
     # @task(1)
-    # class ResetPassword(TaskSet):
+    # class UpdatePassword(TaskSet):
     #     @task(1)
     #     @tag('error', 'post', '400')
-    #     def reset_password_not_match_400(self):
+    #     def update_password_not_match_400(self):
     #         try:
     #             user = USERS.pop()
     #         except KeyError:
