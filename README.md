@@ -97,10 +97,10 @@ For other dockerfiles and more documentation, see original repo: https://github.
         - [x] 200 *correct*
         - [x] 404 *user not found*
     - [ ] `/oauth2/password/{userId}@post` *update password*
-        - [ ] 200 *correct*
+        - [x] 200 *correct*
         - [ ] 404 *user not found*
-        - [ ] 401 *incorrect password*
-        - [ ] 400 *password confirmation failed*
+        - [x] 401 *incorrect password*
+        - [x] 400 *password confirmation failed*
 - [ ] `oauth2-code` *authorization code flow*
   - [ ] `oauth2/code@get` *get authorization code*
     - [x] 302 *redirect with authorization code*

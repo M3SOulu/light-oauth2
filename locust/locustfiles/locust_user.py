@@ -346,10 +346,12 @@ class UserRegistration(HttpUser):
             with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
-            if r.status_code == 400:
-                logging.info(f"Password confirm not match as expected: {user!r}")
-                del user
-            else:
-                failure_str = f"User password confirmation get did not return code 400. Instead: {r.status_code}"
-                logging.info(failure_str)
-            self.interrupt()
+                if r.status_code == 400:
+                    logging.info(f"Password confirm not match as expected: {user!r}")
+                    del user
+                    r.success()
+                else:
+                    failure_str = f"User password confirmation get did not return code 400. Instead: {r.status_code}"
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+                self.interrupt()
