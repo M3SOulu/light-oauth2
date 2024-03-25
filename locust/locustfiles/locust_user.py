@@ -66,8 +66,7 @@ class UserRegistration(HttpUser):
                 USERS.add(user)
             except KeyError:
                 self.interrupt()
-            userupdate = User()
-            userupdate = replace(userupdate, userId=user.userId)
+            userupdate = replace(user, userId=user.userId)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
                                  verify=False, allow_redirects=False,
@@ -89,8 +88,7 @@ class UserRegistration(HttpUser):
                 USERS.add(user)
             except KeyError:
                 self.interrupt()
-            userupdate = User()
-            userupdate = replace(userupdate, email=user.email)
+            userupdate = replace(user, email=user.email)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
                                  verify=False, allow_redirects=False,
