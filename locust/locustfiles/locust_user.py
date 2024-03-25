@@ -185,7 +185,7 @@ class UserRegistration(HttpUser):
             if r.status_code == 200:
                 logging.info(f"Got user: {user!r}")
             else:
-                logging.info(f'user get did not return code 200. Instead: {r.status_code}')
+                logging.info(f'User get did not return code 200. Instead: {r.status_code}')
             self.interrupt()                  
 
         @task(1)
@@ -211,7 +211,7 @@ class UserRegistration(HttpUser):
             if r.status_code == 200:
                 logging.info(f"Got user page with status_code 200.")
             else:
-                logging.info(f'user page get did not return code 200. Instead: {r.status_code}')
+                logging.info(f'User page get did not return code 200. Instead: {r.status_code}')
             self.interrupt()
 
         @task(1)
@@ -244,7 +244,7 @@ class UserRegistration(HttpUser):
                 logging.info(f"Deleted user: {user!r}")
                 del user
             else:
-                logging.info('user deletion did not return code 200')
+                logging.info('User deletion did not return code 200')
                 USERS.add(user)
             self.interrupt()
 
@@ -275,7 +275,6 @@ class UserRegistration(HttpUser):
     #         'password': user.password,  #Existing password
     #         'newPassword': 'NewSecurePassword123!',  # New password
     #         'passwordConfirm': 'NewSecurePassword323!'}  # Confirmation of the new password should not match
-        
     #         r = self.client.post(f"/oauth2/password/{user.userId}", json=Pass,  verify=False, allow_redirects=False)
     #         if r.status_code == 400:
     #             logging.info(f" Password confirm not match: {user!r}")
