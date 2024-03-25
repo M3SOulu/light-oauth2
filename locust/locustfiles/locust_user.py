@@ -59,7 +59,7 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1) 
-        @tag('error', 'register', '400', 'register_user_400_useridexists')
+        @tag('error', 'register', '400', 'register_user_400_user_exists')
         def register_user_400_user_exists(self):
             try:
                 user = USERS.pop()
@@ -82,14 +82,15 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1) 
-        @tag('error', 'register', '400')
+        @tag('error', 'register', '400', 'register_user_400_email_exists')
         def register_user_400_email_exists(self):
             try:
                 user = USERS.pop()
                 USERS.add(user)
             except KeyError:
                 self.interrupt()
-            userupdate = replace(user, email="abc@example.com")
+            userupdate = User()
+            userupdate = replace(userupdate, email=user.email)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
                                  verify=False, allow_redirects=False,
