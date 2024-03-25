@@ -165,14 +165,14 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'update', '404')
+        @tag('error', 'update', '404', 'update_user_404')
         def update_user_404(self):
             try:
                 user = USERS.pop()
                 USERS.add(user)
             except KeyError:
                 self.interrupt()
-            userupdate = replace(user, userId="")
+            userupdate = replace(user, userId=str(uuid4()))
 
             with self.client.put("/oauth2/user", json=userupdate.to_dict(),
                                  verify=False, allow_redirects=False,
