@@ -21,7 +21,7 @@ class User:
     email: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
     password: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, str]:
         return {'userId': self.userId,
                 'userType': self.userType,
                 'firstName': self.firstName,
@@ -105,18 +105,15 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '400')
+        @tag('error', 'register', '400', 'register_user_400_no_password')
         def register_user_400_no_password(self):
-            try:
-                user = USERS.pop()
-                USERS.add(user)
-            except KeyError:
-                self.interrupt()
-            userupdate = replace(user, password="")
+            user = User()
+            req = user.to_dict()
+            del req['passwordConfirm']
 
-            with self.client.post("/oauth2/user", json=userupdate.to_dict(),
-                                 verify=False, allow_redirects=False,
-                                 catch_response=True) as r:
+            with self.client.post("/oauth2/user", json=req,
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
                 if r.status_code == 400:
                     logging.info(f"Password is empty as expected, 400")
                     r.success()
