@@ -41,7 +41,7 @@ class UserRegistration(HttpUser):
     class RegisterUser(TaskSet):
 
         @task(1)
-        @tag('correct', 'register', '200')
+        @tag('correct', 'register', '200', 'register_user_200')
         def register_user_200(self):
             user = User()
             with self.client.post("/oauth2/user", data=user.to_dict(),
