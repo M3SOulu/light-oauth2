@@ -1,3 +1,4 @@
+from .myset import set_with_choice
 from locust import HttpUser, task, TaskSet, tag
 
 import urllib3
@@ -11,7 +12,7 @@ __all__ = ['USERS', 'User', 'UserRegistration']
 
 # Documentation https://www.networknt.com/service/oauth/service/user/
 
-USERS = set()
+USERS = set_with_choice()
 
 
 @dataclass(init=True, repr=True, eq=False)
@@ -74,8 +75,7 @@ class UserRegistration(HttpUser):
         @tag('error', 'register', '400', 'register_user_400_user_exists')
         def register_user_400_user_exists(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             userupdate = replace(user, userId=user.userId)
@@ -96,8 +96,7 @@ class UserRegistration(HttpUser):
         @tag('error', 'register', '400', 'register_user_400_email_exists')
         def register_user_400_email_exists(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             userupdate = replace(user, email=user.email)
@@ -181,8 +180,7 @@ class UserRegistration(HttpUser):
         @tag('error', 'update', '404', 'update_user_404')
         def update_user_404(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             userupdate = replace(user, userId=str(uuid4()))
@@ -205,8 +203,7 @@ class UserRegistration(HttpUser):
         @tag('correct', 'get', '200', 'get_user_200')
         def get_user_200(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             r = self.client.get(f"/oauth2/user/{user.userId}", verify=False, allow_redirects=False)
@@ -296,8 +293,7 @@ class UserRegistration(HttpUser):
         @tag('correct', 'post', '200', 'update_password_200')
         def update_password_200(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             passwd = user.new_password()
@@ -318,8 +314,7 @@ class UserRegistration(HttpUser):
         @tag('error', 'post', '401', 'update_password_wrong_password_401')
         def update_password_wrong_password_401(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             passwd = user.new_password()
@@ -341,8 +336,7 @@ class UserRegistration(HttpUser):
         @tag('error', 'post', '404', 'update_password_user_not_found_404')
         def update_password_user_not_found_404(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             passwd = user.new_password()
@@ -361,8 +355,7 @@ class UserRegistration(HttpUser):
         @tag('error', 'post', '400', 'update_password_not_match_400')
         def update_password_not_match_400(self):
             try:
-                user = USERS.pop()
-                USERS.add(user)
+                user = USERS.choice()
             except KeyError:
                 self.interrupt()
             passwd = user.new_password()

@@ -1,3 +1,4 @@
+from .myset import set_with_choice
 from locust import HttpUser, task, TaskSet, tag
 from locust.exception import RescheduleTask
 
@@ -9,7 +10,7 @@ from dataclasses import dataclass, field, replace
 
 __all__ = ['CLIENTS', 'Client', 'ClientRegistration']
 
-CLIENTS = set()
+CLIENTS = set_with_choice()
 
 
 @dataclass(init=True, repr=True, eq=False)
@@ -84,8 +85,7 @@ class ClientRegistration(HttpUser):
         @tag('error', 'register', '400')
         def register_client_400_clientType(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
             c2 = replace(c, clientType="none")
@@ -107,8 +107,7 @@ class ClientRegistration(HttpUser):
         @tag('error', 'register', '400')
         def register_client_400_clientProfile(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
             c2 = replace(c, clientProfile="none")
@@ -130,8 +129,7 @@ class ClientRegistration(HttpUser):
         @tag('error', 'register', '404')
         def register_client_404(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
             c2 = replace(c, ownerId="nouser")
@@ -181,8 +179,7 @@ class ClientRegistration(HttpUser):
         @tag('error', 'update', '404')
         def update_client_404(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 #logging.info("No clients available to update")
                 self.interrupt()
@@ -238,8 +235,7 @@ class ClientRegistration(HttpUser):
         @tag('correct', 'get', '200')
         def get_client_200(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
             r = self.client.get(f"/oauth2/client/{c.clientId}", verify=False, allow_redirects=False)
