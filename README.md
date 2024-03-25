@@ -77,8 +77,8 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [ ] `/oauth2/client/{clientId}/service@delete` *delete all endpoints linked to a client*
         - [ ] 200 *correct*
         - [ ] 404 *`clientId` not found*
-- [ ] `oauth2-user` *handle user database*
-    - [ ] `/oauth2/user@post` *create new user*
+- [x] `oauth2-user` *handle user database*
+    - [x] `/oauth2/user@post` *create new user*
         - [x] 200 *correct*
         - [x] 400 *`userId` exists*
         - [x] 400 *email exists*

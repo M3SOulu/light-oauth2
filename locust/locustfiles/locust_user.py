@@ -1,5 +1,4 @@
 from locust import HttpUser, task, TaskSet, tag
-from locust.exception import RescheduleTask
 
 import logging
 from uuid import uuid4
@@ -46,6 +45,7 @@ class UserRegistration(HttpUser):
     fixed_count = 1
     host = 'https://localhost:6885'
 
+    # noinspection PyUnboundLocalVariable
     @task(1)
     class RegisterUser(TaskSet):
 
@@ -78,8 +78,8 @@ class UserRegistration(HttpUser):
             userupdate = replace(user, userId=user.userId)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
-                                 verify=False, allow_redirects=False,
-                                 catch_response=True) as r:
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
                 if r.status_code == 400:
                     logging.info(f"UserId exists as expected, 400")
                     r.success()
@@ -100,8 +100,8 @@ class UserRegistration(HttpUser):
             userupdate = replace(user, email=user.email)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
-                                 verify=False, allow_redirects=False,
-                                 catch_response=True) as r:
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
                 if r.status_code == 400:
                     logging.info(f"Email exists already as expected, 400")
                     r.success()
@@ -148,6 +148,7 @@ class UserRegistration(HttpUser):
                     r.failure(failstr)
                 self.interrupt()
 
+    # noinspection PyUnboundLocalVariable
     @task(1)
     class UpdateUser(TaskSet):
         @task(1)
