@@ -96,9 +96,9 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] `/oauth2/user/{userId}@delete` *delete a user*
         - [x] 200 *correct*
         - [x] 404 *user not found*
-    - [ ] `/oauth2/password/{userId}@post` *update password*
+    - [x] `/oauth2/password/{userId}@post` *update password*
         - [x] 200 *correct*
-        - [ ] 404 *user not found*
+        - [x] 404 *user not found*
         - [x] 401 *incorrect password*
         - [x] 400 *password confirmation failed*
 - [ ] `oauth2-code` *authorization code flow*

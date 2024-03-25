@@ -334,6 +334,25 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
+        @tag('error', 'post', '404', 'update_password_user_not_found_404')
+        def update_password_user_not_found_404(self):
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            passwd = user.new_password()
+            with self.client.post(f"/oauth2/password/none", json=passwd,
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
+                if r.status_code == 404:
+                    del user
+                else:
+                    failure_str = f"Update password did not return code 404. Instead: {r.status_code}"
+                    logging.info(failure_str)
+                self.interrupt()
+
+        @task(1)
         @tag('error', 'post', '400', 'update_password_not_match_400')
         def update_password_not_match_400(self):
             try:
