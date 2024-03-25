@@ -189,7 +189,7 @@ class UserRegistration(HttpUser):
     @task(1)
     class GetUser(TaskSet):
         @task(1)
-        @tag('correct', 'get', '200')
+        @tag('correct', 'get', '200', 'get_user_200')
         def get_user_200(self):
             try:
                 user = USERS.pop()
@@ -204,7 +204,7 @@ class UserRegistration(HttpUser):
             self.interrupt()                  
 
         @task(1)
-        @tag('error', 'get', '404')
+        @tag('error', 'get', '404', 'get_user_404')
         def get_user_404(self):
             with self.client.get(f"/oauth2/user/none", verify=False,
                                  allow_redirects=False, catch_response=True) as r:
@@ -220,7 +220,7 @@ class UserRegistration(HttpUser):
     @task(1)
     class GetUserPage(TaskSet):
         @task(1)
-        @tag('correct', 'get', '200')
+        @tag('correct', 'get', '200', 'get_user_page_200')
         def get_user_page_200(self):
             r = self.client.get(f"/oauth2/user", params={'page': '1'}, verify=False, allow_redirects=False)
             if r.status_code == 200:
@@ -230,7 +230,7 @@ class UserRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'get', '400')
+        @tag('error', 'get', '400', 'get_user_page_400')
         def get_user_page_400(self):
             with self.client.get("/oauth2/user", params={},
                                  verify=False, allow_redirects=False,
@@ -243,7 +243,6 @@ class UserRegistration(HttpUser):
                     logging.info(failure_str)
                     r.failure(failure_str)
                 self.interrupt()
-
 
     @task(1)
     class DeleteUser(TaskSet):            
