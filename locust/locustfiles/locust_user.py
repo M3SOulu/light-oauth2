@@ -247,12 +247,13 @@ class UserRegistration(HttpUser):
     @task(1)
     class DeleteUser(TaskSet):            
         @task(1)
-        @tag('correct', 'delete', '200')
+        @tag('correct', 'delete', '200', 'delete_user_200')
         def delete_user_200(self):
             try:
                 user = USERS.pop()
             except KeyError:
                 self.interrupt()
+
             r = self.client.delete(f"/oauth2/user/{user.userId}", verify=False, allow_redirects=False)
             if r.status_code == 200:
                 logging.info(f"Deleted user: {user!r}")
@@ -263,10 +264,10 @@ class UserRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'delete', '404')
+        @tag('error', 'delete', '404', 'delete_user_404')
         def delete_user_404(self):
             with self.client.delete(f"/oauth2/user/none", verify=False,
-                                 allow_redirects=False, catch_response=True) as r:
+                                    allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
                     logging.info("Tried to delete the user with bad id, status 404 as expected.")
                     r.success()
