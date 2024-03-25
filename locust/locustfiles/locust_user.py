@@ -144,27 +144,28 @@ class UserRegistration(HttpUser):
     @task(1)
     class UpdateUser(TaskSet):
         @task(1)
-        @tag('correct', 'update', '200')
+        @tag('correct', 'update', '200', 'update_user_200')
         def update_user_200(self):
             try:
                 user = USERS.pop()
             except KeyError:
-                  self.interrupt
+                self.interrupt()
             user2 = replace(user, userId=user.userId)
             with self.client.put("/oauth2/user", data=user2.to_dict(),
-                                  verify=False, allow_redirects=False,
-                                  catch_response=True) as r:
+                                 verify=False, allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 200:
-                     USERS.add(user2)
-                     logging.info(f"Updated user: {user2!r}")
-                     del user
-                     r.success()
+                    USERS.add(user2)
+                    del user
+                    logging.info(f"Updated user: {user2!r}")
+                    r.success()
                 else:
-                     USERS.add(user)
-                     del user2
-                     logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
-                     r.failure(f"User updation did not return code 200", {r.status_code})
+                    USERS.add(user)
+                    del user2
+                    logging.info(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
+                    r.failure(f"User updation did not return code 200", {r.status_code})
                 self.interrupt()
+
         @task(1)
         @tag('error', 'update', '404')
         def update_user_404(self):
