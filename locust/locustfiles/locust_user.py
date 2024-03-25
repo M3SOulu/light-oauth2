@@ -289,6 +289,29 @@ class UserRegistration(HttpUser):
     @task(1)
     class UpdatePassword(TaskSet):
         @task(1)
+        @tag('correct', 'post', '200', 'update_password_200')
+        def update_password_200(self):
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            passwd = user.new_password()
+            with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
+                if r.status_code == 200:
+                    user.switch_password()
+                    logging.info(f"Updated user password: {user!r}")
+                    r.success()
+                else:
+                    failure_str = f"User password update get did not return code 200. Instead: {r.status_code}"
+                    logging.info(failure_str)
+                    r.failure(failure_str)
+                self.interrupt()
+
+
+        @task(1)
         @tag('error', 'post', '400', 'update_password_not_match_400')
         def update_password_not_match_400(self):
             try:
