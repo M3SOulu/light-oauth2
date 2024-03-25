@@ -310,6 +310,28 @@ class UserRegistration(HttpUser):
                     r.failure(failure_str)
                 self.interrupt()
 
+        @task(1)
+        @tag('error', 'post', '401', 'update_password_wrong_password_401')
+        def update_password_wrong_password_401(self):
+            try:
+                user = USERS.pop()
+                USERS.add(user)
+            except KeyError:
+                self.interrupt()
+            passwd = user.new_password()
+            passwd['password'] = str(uuid4())
+            with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
+                if r.status_code == 401:
+                    logging.info(f"Password confirm not match as expected: {user!r}")
+                    del user
+                else:
+                    failure_str = f"User password confirmation get did not return code 401. Instead: {r.status_code}"
+                    logging.info(failure_str)
+                    if r.status_code == 200:
+                        user.switch_password()
+                self.interrupt()
 
         @task(1)
         @tag('error', 'post', '400', 'update_password_not_match_400')
