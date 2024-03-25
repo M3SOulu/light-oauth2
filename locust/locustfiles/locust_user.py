@@ -123,6 +123,23 @@ class UserRegistration(HttpUser):
                     r.failure(failstr)
                 self.interrupt()
 
+        @task(1)
+        @tag('error', 'register', '400', 'register_user_400_password_no_match')
+        def register_user_400_no_match(self):
+            user = User()
+            req = user.to_dict()
+            req['passwordConfirm'] = str(uuid4())
+            with self.client.post("/oauth2/user", json=req,
+                                  verify=False, allow_redirects=False,
+                                  catch_response=True) as r:
+                if r.status_code == 400:
+                    logging.info(f"Password is empty as expected, 400")
+                    r.success()
+                else:
+                    failstr = f"Unexpected status code when registering user without matching password: {r.status_code}"
+                    logging.info(failstr)
+                    r.failure(failstr)
+                self.interrupt()
 
     @task(1)
     class UpdateUser(TaskSet):
