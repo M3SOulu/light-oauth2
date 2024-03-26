@@ -64,7 +64,7 @@ class OAuthUser(HttpUser):
         CLIENTS.add(self.oauth.client)
         self.oauth = OAuthFlow(new_cl)
 
-    @task
+    @task(1)
     def access_token_client_credentials_flow(self):
         user: OAuthUser = self.user
         r = self.client.post(f"{self.token_host}/oauth2/token",
@@ -83,10 +83,10 @@ class OAuthUser(HttpUser):
             logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
                          f"error code is {r['code']}")
 
-    @task
+    @task(1)
     class AuthorizationCodeFlow(SequentialTaskSet):
 
-        @task
+        @task(1)
         def access_code(self):
             user: OAuthUser = self.user
             r = self.client.get(f"{user.code_host}/oauth2/code",
@@ -103,7 +103,7 @@ class OAuthUser(HttpUser):
             else:
                 logging.warning("Auth Code: Endpoint did not redirect")
 
-        @task
+        @task(1)
         def access_token_authorization_code_flow(self):
             user: OAuthUser = self.user
             r = self.client.post(f"{user.token_host}/oauth2/token",
@@ -146,7 +146,7 @@ class OAuthUser(HttpUser):
             else:
                 logging.info("Auth Code: Endpoint did not redirect")
 
-        @task
+        @task(1)
         def access_token_authorization_code_flow_pkce(self):
             user: OAuthUser = self.user
             r = self.client.post(f"{user.token_host}/oauth2/token",
