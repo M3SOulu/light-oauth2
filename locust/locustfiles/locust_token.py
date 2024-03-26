@@ -39,9 +39,10 @@ class OAuthFlow:
         return request
 
     def token_request(self, grant_type: str, pkce: bool = False) -> dict[str, str]:
-        request = {"grant_type": grant_type,
-                   "code": self.authorization_code,
-                   "redirect_uri": "http://localhost:8080/authorization"}
+        request = {"grant_type": grant_type}
+        if grant_type == 'authorization_code':
+            request["code"] = self.authorization_code
+            request["redirect_uri"] = "http://localhost:8080/authorization"
         if pkce:
             request["code_verifier"] = self.PKCE_code_verifier
         return request
@@ -59,7 +60,9 @@ class OAuthUser(HttpUser):
 
     @task
     def access_token_client_credentials_flow(self):
-        r = self.client.post(f"{self.token_host}/oauth2/token", data={"grant_type": "client_credentials"},
+        user: OAuthUser = self.user
+        r = self.client.post(f"{self.token_host}/oauth2/token",
+                             data=user.oauth.token_request('client_credentials'),
                              auth=(self.oauth.client.clientId, self.oauth.client.clientSecret),
                              verify=False,
                              allow_redirects=False)
