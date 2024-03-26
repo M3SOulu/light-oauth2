@@ -77,8 +77,9 @@ class OAuthUser(HttpUser):
 
         @task
         def access_code(self):
-            r = self.client.get(f"{self.user.code_host}/oauth2/code",
-                                params=self.user.oauth.code_request(),
+            user: OAuthUser = self.user
+            r = self.client.get(f"{user.code_host}/oauth2/code",
+                                params=user.oauth.code_request(),
                                 auth=('admin', '123456'),
                                 verify=False,
                                 allow_redirects=False)
@@ -86,23 +87,24 @@ class OAuthUser(HttpUser):
                 parsed_redirect = urlparse(r.headers['Location'])
                 redirect_params = parse_qs(parsed_redirect.query)
                 auth_code = redirect_params.get('code')[0]
-                self.user.oauth.authorization_code = auth_code
-                logging.info(f"Auth Code: ClientId = {self.user.oauth.client.clientId}, Authorization_code = {auth_code}")
+                user.oauth.authorization_code = auth_code
+                logging.info(f"Auth Code: ClientId = {user.oauth.client.clientId}, Authorization_code = {auth_code}")
             else:
                 logging.warning("Auth Code: Endpoint did not redirect")
 
         @task
         def access_token_authorization_code_flow(self):
-            r = self.client.post(f"{self.user.token_host}/oauth2/token",
-                                 data=self.user.oauth.token_request('authorization_code'),
-                                 auth=(self.user.oauth.client.clientId, self.user.oauth.client.clientSecret),
+            user: OAuthUser = self.user
+            r = self.client.post(f"{user.token_host}/oauth2/token",
+                                 data=user.oauth.token_request('authorization_code'),
+                                 auth=(user.oauth.client.clientId, user.oauth.client.clientSecret),
                                  verify=False,
                                  allow_redirects=False)
             if r.status_code == 200:
                 r = r.json()
                 access_token = r['access_token']
-                self.user.oauth.access_token = access_token
-                logging.info(f"Access Token Authorization Code Flow: ClientId = {self.user.oauth.client.clientId},"
+                user.oauth.access_token = access_token
+                logging.info(f"Access Token Authorization Code Flow: ClientId = {user.oauth.client.clientId},"
                              f"Access Token = {access_token}")
             else:
                 r = r.json()
