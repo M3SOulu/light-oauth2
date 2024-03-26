@@ -19,8 +19,13 @@ class OAuthFlow:
     authorization_code: str = field(init=False)
     access_token: str = field(init=False)
     refresh_token: str = field(init=False)
-    PKCE_code_challenge: str = field(init=False)
+    PKCE_code_challenge: bytes = field(init=False)
+    PKCE_code_challenge_method: str = field(default='S256', init=False)
     PKCE_code_verifier: str = field(init=False)
+
+    def make_pkce(self):
+        self.PKCE_code_verifier = str(uuid4()) + str(uuid4)
+        self.PKCE_code_challenge = b64encode(sha256(self.PKCE_code_verifier.encode('utf-8')).digest())
 
 
 class OAuthUser(HttpUser):
@@ -94,54 +99,46 @@ class OAuthUser(HttpUser):
     class AuthorizationCodeFlowPKCE(SequentialTaskSet):
 
         def on_start(self):
-            try:
-                self.user.cl = CLIENTS.pop()
-            except KeyError:
-                self.interrupt()
-            self.code_verifier = str(uuid4()) + str(uuid4)
-            self.code_challenage = b64encode(sha256(self.code_verifier.encode('utf-8')).digest())
+            self.user.oauth.make_pkce()
 
         @task(1)
         def access_code_pkce(self):
-            r = self.client.get(
-                f"{self.user.code_host}/oauth2/code", params={
-                    "response_type": "code",
-                    "client_id": self.user.cl.clientId,
-                    "redirect_uri": "http://localhost:8080/authorization"
-                },
-                auth=('admin', '123456'),
-                verify=False,
-                allow_redirects=False)
+            user: OAuthUser = self.user
+            r = self.client.get(f"{user.code_host}/oauth2/code", params={"response_type": "code",
+                                                                         "client_id": user.oauth.client.clientId,
+                                                                         "redirect_uri": "http://localhost:8080/authorization",
+                                                                         "code_challenge": user.oauth.PKCE_code_challenge,
+                                                                         "code_challenge_method": user.oauth.PKCE_code_challenge_method},
+                                auth=('admin', '123456'),
+                                verify=False,
+                                allow_redirects=False)
             if r.status_code == 302:
                 parsed_redirect = urlparse(r.headers['Location'])
                 redirect_params = parse_qs(parsed_redirect.query)
-                self.user.auth_code = redirect_params.get('code')[0]
-                logging.info(f"Auth Code: ClientId = {self.user.cl.clientId}, Authorization_code = {self.user.auth_code}")
+                auth_code = redirect_params.get('code')[0]
+                user.oauth.authorization_code = auth_code
+                logging.info(f"Auth Code: ClientId = {user.oauth.client.clientId}, Authorization_code = {auth_code}")
             else:
                 logging.info("Auth Code: Endpoint did not redirect")
 
         @task
         def access_token_authorization_code_flow_pkce(self):
-            r = self.client.post(
-                f"{self.user.token_host}/oauth2/token", data={
-                    "grant_type": "client_credentials",
-                    "code": self.user.auth_code,
-                    "redirect_uri": "http://localhost:8080/authorization"
-                },
-                auth=(self.user.cl.clientId, self.user.cl.clientSecret),
-                verify=False,
-                allow_redirects=False)
+            user: OAuthUser = self.user
+            r = self.client.post(f"{user.token_host}/oauth2/token", data={"grant_type": "authorization_code",
+                                                                          "code": user.oauth.authorization_code,
+                                                                          "redirect_uri": "http://localhost:8080/authorization",
+                                                                          "code_verifier": user.oauth.PKCE_code_verifier},
+                                 auth=(user.oauth.client.clientId, user.oauth.client.clientSecret),
+                                 verify=False,
+                                 allow_redirects=False)
             if r.status_code == 200:
                 r = r.json()
-                self.user.access_token = r['access_token']
-                logging.info(
-                    f"Access Token Authorization Code Flow: ClientId = {self.user.cl.clientId}, Access Token = {self.user.access_token}")
+                access_token = r['access_token']
+                user.oauth.access_token = access_token
+                logging.info(f"Access Token Authorization Code Flow: ClientId = {user.client.clientId},"
+                             f"Access Token = {access_token}")
             else:
                 r = r.json()
                 logging.info(f"Access Token Authorization Code Flow: Did not get code 200, code is {r['statusCode']}, "
                              f"error code is {r['code']}")
-            self.user.auth_code = None
             self.interrupt()
-
-        def on_stop(self):
-            CLIENTS.add(self.user.cl)
