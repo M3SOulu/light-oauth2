@@ -20,12 +20,14 @@ class OAuthFlow:
     access_token: str = field(init=False)
     refresh_token: str = field(init=False)
     PKCE_code_challenge: bytes = field(init=False)
-    PKCE_code_challenge_method: str = field(default='S256', init=False)
+    PKCE_code_challenge_method: str = field(init=False)
     PKCE_code_verifier: str = field(init=False)
 
-    def make_pkce(self):
+    def make_pkce(self, method='S256'):
         self.PKCE_code_verifier = str(uuid4()) + str(uuid4)
-        self.PKCE_code_challenge = b64encode(sha256(self.PKCE_code_verifier.encode('utf-8')).digest())
+        self.PKCE_code_challenge_method = method
+        if method == 'S256':
+            self.PKCE_code_challenge = b64encode(sha256(self.PKCE_code_verifier.encode('utf-8')).digest())
 
     def code_request(self, pkce: bool = False) -> dict[str, str]:
         request = {"response_type": "code",
