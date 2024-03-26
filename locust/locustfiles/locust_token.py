@@ -27,6 +27,23 @@ class OAuthFlow:
         self.PKCE_code_verifier = str(uuid4()) + str(uuid4)
         self.PKCE_code_challenge = b64encode(sha256(self.PKCE_code_verifier.encode('utf-8')).digest())
 
+    def code_request(self, pkce: bool = False) -> dict[str, str]:
+        request = {"response_type": "code",
+                   "client_id": self.client.clientId,
+                   "redirect_uri": "http://localhost:8080/authorization"}
+        if pkce:
+            request["code_challenge"] = self.PKCE_code_challenge,
+            request["code_challenge_method"] = self.PKCE_code_challenge_method
+        return request
+
+    def token_request(self, grant_type: str, pkce: bool = False) -> dict[str, str]:
+        request = {"grant_type": grant_type,
+                   "code": self.authorization_code,
+                   "redirect_uri": "http://localhost:8080/authorization"}
+        if pkce:
+            request["code_verifier"] = self.PKCE_code_verifier
+        return request
+
 
 class OAuthUser(HttpUser):
 
@@ -60,9 +77,8 @@ class OAuthUser(HttpUser):
 
         @task
         def access_code(self):
-            r = self.client.get(f"{self.user.code_host}/oauth2/code", params={"response_type": "code",
-                                                                              "client_id": self.user.oauth.client.clientId,
-                                                                              "redirect_uri": "http://localhost:8080/authorization" },
+            r = self.client.get(f"{self.user.code_host}/oauth2/code",
+                                params=self.user.oauth.code_request(),
                                 auth=('admin', '123456'),
                                 verify=False,
                                 allow_redirects=False)
@@ -77,9 +93,8 @@ class OAuthUser(HttpUser):
 
         @task
         def access_token_authorization_code_flow(self):
-            r = self.client.post(f"{self.user.token_host}/oauth2/token", data={"grant_type": "client_credentials",
-                                                                               "code": self.user.oauth.authorization_code,
-                                                                               "redirect_uri": "http://localhost:8080/authorization"},
+            r = self.client.post(f"{self.user.token_host}/oauth2/token",
+                                 data=self.user.oauth.token_request('authorization_code'),
                                  auth=(self.user.oauth.client.clientId, self.user.oauth.client.clientSecret),
                                  verify=False,
                                  allow_redirects=False)
@@ -104,11 +119,8 @@ class OAuthUser(HttpUser):
         @task(1)
         def access_code_pkce(self):
             user: OAuthUser = self.user
-            r = self.client.get(f"{user.code_host}/oauth2/code", params={"response_type": "code",
-                                                                         "client_id": user.oauth.client.clientId,
-                                                                         "redirect_uri": "http://localhost:8080/authorization",
-                                                                         "code_challenge": user.oauth.PKCE_code_challenge,
-                                                                         "code_challenge_method": user.oauth.PKCE_code_challenge_method},
+            r = self.client.get(f"{user.code_host}/oauth2/code",
+                                params=user.oauth.code_request(pkce=True),
                                 auth=('admin', '123456'),
                                 verify=False,
                                 allow_redirects=False)
@@ -124,10 +136,8 @@ class OAuthUser(HttpUser):
         @task
         def access_token_authorization_code_flow_pkce(self):
             user: OAuthUser = self.user
-            r = self.client.post(f"{user.token_host}/oauth2/token", data={"grant_type": "authorization_code",
-                                                                          "code": user.oauth.authorization_code,
-                                                                          "redirect_uri": "http://localhost:8080/authorization",
-                                                                          "code_verifier": user.oauth.PKCE_code_verifier},
+            r = self.client.post(f"{user.token_host}/oauth2/token",
+                                 data=user.oauth.token_request('authorization_code', pkce=True),
                                  auth=(user.oauth.client.clientId, user.oauth.client.clientSecret),
                                  verify=False,
                                  allow_redirects=False)
