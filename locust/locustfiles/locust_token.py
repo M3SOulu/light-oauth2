@@ -58,6 +58,12 @@ class OAuthUser(HttpUser):
         cl = CLIENTS.pop()
         self.oauth = OAuthFlow(cl)
 
+    @task(0)
+    def change_client(self):
+        new_cl = CLIENTS.pop()
+        CLIENTS.add(self.oauth.client)
+        self.oauth = OAuthFlow(new_cl)
+
     @task
     def access_token_client_credentials_flow(self):
         user: OAuthUser = self.user
