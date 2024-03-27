@@ -79,7 +79,8 @@ class UserRegistration(HttpUser):
             userupdate = replace(user, userId=user.userId)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"UserId exists as expected, 400")
@@ -88,7 +89,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user with existing userId: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                self.interrupt()
+            self.interrupt()
 
         @task(1) 
         @tag('error', 'register', '400', 'register_user_400_email_exists')
@@ -100,7 +101,8 @@ class UserRegistration(HttpUser):
             userupdate = replace(user, email=user.email)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"Email exists already as expected, 400")
@@ -109,7 +111,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'register', '400', 'register_user_400_no_password')
@@ -119,7 +121,8 @@ class UserRegistration(HttpUser):
             del req['passwordConfirm']
 
             with self.client.post("/oauth2/user", json=req,
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"Password is empty as expected, 400")
@@ -128,7 +131,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user without password: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'register', '400', 'register_user_400_password_no_match')
@@ -137,7 +140,8 @@ class UserRegistration(HttpUser):
             req = user.to_dict()
             req['passwordConfirm'] = str(uuid4())
             with self.client.post("/oauth2/user", json=req,
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"Passwords do not match as expected, 400")
@@ -146,7 +150,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user without matching password: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                self.interrupt()
+            self.interrupt()
 
     # noinspection PyUnboundLocalVariable
     @task(1)
@@ -160,7 +164,8 @@ class UserRegistration(HttpUser):
                 self.interrupt()
             user2 = replace(user, userId=user.userId)
             with self.client.put("/oauth2/user", data=user2.to_dict(),
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
                     USERS.add(user2)
@@ -172,7 +177,7 @@ class UserRegistration(HttpUser):
                     del user2
                     logging.warning(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
                     r.failure(f"User updation did not return code 200", {r.status_code})
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'update', '404', 'update_user_404_no_user')
@@ -184,7 +189,8 @@ class UserRegistration(HttpUser):
             userupdate = replace(user, userId=str(uuid4()))
 
             with self.client.put("/oauth2/user", json=userupdate.to_dict(),
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error(f"User update without id failed as expected, 404")
@@ -193,7 +199,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating user without id: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                self.interrupt()
+            self.interrupt()
                 
     @task(1)
     class GetUser(TaskSet):
@@ -204,18 +210,26 @@ class UserRegistration(HttpUser):
                 user = USERS.choice()
             except KeyError:
                 self.interrupt()
-            r = self.client.get(f"/oauth2/user/{user.userId}", verify=False, allow_redirects=False)
-            if r.status_code == 200:
-                logging.info(f"Got user: {user!r}")
-            else:
-                logging.warning(f'User get did not return code 200. Instead: {r.status_code}')
+            with self.client.get(f"/oauth2/user/{user.userId}",
+                                verify=False,
+                                allow_redirects=False,
+                                catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"Got user: {user!r}")
+                    r.success()
+                else:
+                    failure_str = f'User get did not return code 200. Instead: {r.status_code}'
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
             self.interrupt()                  
 
         @task(1)
         @tag('error', 'get', '404', 'get_user_404_no_user')
         def get_user_404_no_user(self):
-            with self.client.get(f"/oauth2/user/none", verify=False,
-                                 allow_redirects=False, catch_response=True) as r:
+            with self.client.get(f"/oauth2/user/none",
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error("Tried to get the user with bad id, status 404 as expected.")
                     r.success()
@@ -223,25 +237,32 @@ class UserRegistration(HttpUser):
                     failure_str = f'Get user with bad id got unexpected status code {r.status_code}'
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                self.interrupt()
+            self.interrupt()
 
     @task(1)
     class GetUserPage(TaskSet):
         @task(1)
         @tag('correct', 'get', '200', 'get_user_page_200')
         def get_user_page_200(self):
-            r = self.client.get(f"/oauth2/user", params={'page': '1'}, verify=False, allow_redirects=False)
-            if r.status_code == 200:
-                logging.info(f"Got user page with status_code 200.")
-            else:
-                logging.warning(f'User page get did not return code 200. Instead: {r.status_code}')
+            with self.client.get(f"/oauth2/user", params={'page': '1'},
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"Got user page with status_code 200.")
+                    r.success()
+                else:
+                    failure_str = f'User page get did not return code 200. Instead: {r.status_code}'
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
             self.interrupt()
 
         @task(1)
         @tag('error', 'get', '400', 'get_user_page_400_no_page')
         def get_user_page_400_no_page(self):
             with self.client.get("/oauth2/user", params={},
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error("Called user page without page, status 400 as expected.")
@@ -250,7 +271,7 @@ class UserRegistration(HttpUser):
                     failure_str = f"user page get did not return code 400. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                self.interrupt()
+            self.interrupt()
 
     @task(1)
     class DeleteUser(TaskSet):            
@@ -262,20 +283,28 @@ class UserRegistration(HttpUser):
             except KeyError:
                 self.interrupt()
 
-            r = self.client.delete(f"/oauth2/user/{user.userId}", verify=False, allow_redirects=False)
-            if r.status_code == 200:
-                logging.info(f"Deleted user: {user!r}")
-                del user
-            else:
-                logging.warning('User deletion did not return code 200')
-                USERS.add(user)
+            with self.client.delete(f"/oauth2/user/{user.userId}",
+                                    verify=False,
+                                    allow_redirects=False,
+                                    catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"Deleted user: {user!r}")
+                    del user
+                    r.success()
+                else:
+                    USERS.add(user)
+                    failure_str = f'User page get did not return code 200. Instead: {r.status_code}'
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
             self.interrupt()
 
         @task(1)
         @tag('error', 'delete', '404', 'delete_user_404_no_user')
         def delete_user_404_no_user(self):
-            with self.client.delete(f"/oauth2/user/none", verify=False,
-                                    allow_redirects=False, catch_response=True) as r:
+            with self.client.delete(f"/oauth2/user/none",
+                                    verify=False,
+                                    allow_redirects=False,
+                                    catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error("Tried to delete the user with bad id, status 404 as expected.")
                     r.success()
@@ -283,7 +312,7 @@ class UserRegistration(HttpUser):
                     failure_str = f'Delete user with bad id got unexpected status code {r.status_code}'
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                self.interrupt()
+            self.interrupt()
 
     @task(1)
     class UpdatePassword(TaskSet):
@@ -296,7 +325,8 @@ class UserRegistration(HttpUser):
                 self.interrupt()
             passwd = user.new_password()
             with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 200:
                     user.switch_password()
@@ -306,7 +336,7 @@ class UserRegistration(HttpUser):
                     failure_str = f"User password update get did not return code 200. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'post', '401', 'update_password_401_wrong_password')
@@ -318,17 +348,20 @@ class UserRegistration(HttpUser):
             passwd = user.new_password()
             passwd['password'] = str(uuid4())
             with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 401:
-                    logging.error(f"Password confirm not match as expected: {user!r}")
                     del user
+                    logging.error(f"Password confirm not match as expected: {user!r}")
+                    r.success()
                 else:
-                    failure_str = f"User password confirmation get did not return code 401. Instead: {r.status_code}"
-                    logging.warning(failure_str)
                     if r.status_code == 200:
                         user.switch_password()
-                self.interrupt()
+                    failure_str = f"User password confirmation get did not return code 401. Instead: {r.status_code}"
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
 
         @task(1)
         @tag('error', 'post', '404', 'update_password_404_user_not_found')
@@ -339,15 +372,18 @@ class UserRegistration(HttpUser):
                 self.interrupt()
             passwd = user.new_password()
             with self.client.post(f"/oauth2/password/none", json=passwd,
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Update password for invalid user failed as expected, status code 404")
                     del user
+                    logging.error("Update password for invalid user failed as expected, status code 404")
+                    r.success()
                 else:
                     failure_str = f"Update password did not return code 404. Instead: {r.status_code}"
                     logging.warning(failure_str)
-                self.interrupt()
+                    r.failure(failure_str)
+            self.interrupt()
 
         @task(1)
         @tag('error', 'post', '400', 'update_password_400_not_match')
@@ -359,7 +395,8 @@ class UserRegistration(HttpUser):
             passwd = user.new_password()
             passwd['newPasswordConfirm'] = str(uuid4())
             with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"Password confirm not match as expected: {user!r}")
@@ -369,4 +406,4 @@ class UserRegistration(HttpUser):
                     failure_str = f"User password confirmation get did not return code 400. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                self.interrupt()
+            self.interrupt()

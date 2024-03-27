@@ -66,20 +66,22 @@ class ClientRegistration(HttpUser):
         def register_client_200(self):
             c = Client(clientId="none", clientSecret="none")
             with self.client.post("/oauth2/client", data=c.to_dict(),
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 200:
                     t = r.json()
                     c.clientId = t['clientId']
                     c.clientSecret = t['clientSecret']
-                    logging.info(f"Registered client: {c!r}")
                     CLIENTS.add(c)
+                    logging.info(f"Registered client: {c!r}")
                     r.success()
                 else:
                     del c
-                    logging.warning("Client registration did not return code 200")
-                    r.failure("Client registration did not return code 200")
-                self.interrupt()
+                    failure_str = "Client registration did not return code 200"
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
 
         @task(1)
         @tag('error', 'register', '400', 'register_client_400_clientType')
@@ -90,18 +92,19 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
             c2 = replace(c, clientType="none")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
 
                 if r.status_code == 400:
                     logging.error(f"Client Registration: error code 400 returned as expected (wrong clientType)")
                     r.success()
                 else:
-                    failure_str = "Client Registration: did not return code 400 (clientType). Instead: " + str(r.status_code)
+                    failure_str = f"Client Registration: did not return code 400 (clientType). Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
                 del c2
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'register', '400', 'register_client_400_clientProfile')
@@ -112,18 +115,19 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
             c2 = replace(c, clientProfile="none")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
 
                 if r.status_code == 400:
                     logging.error(f"Client Registration: error code 400 returned as expected (wrong clientProfile)")
                     r.success()
                 else:
-                    failure_str = "Client Registration: did not return code 400 (clientProfile). Instead: " + str(r.status_code)
+                    failure_str = f"Client Registration: did not return code 400 (clientProfile). Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
                 del c2
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'register', '404', 'register_client_404_no_user')
@@ -134,17 +138,18 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
             c2 = replace(c, ownerId="nouser")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
-                                  verify=False, allow_redirects=False,
+                                  verify=False,
+                                  allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error("Client Registration: error code 404 returned as expected (non-existent user)")
                     r.success()
                 else:
-                    failure_str = "Client Registration: did not return code 404. Instead: " + str(r.status_code)
+                    failure_str = f"Client Registration: did not return code 404. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
                 del c2
-                self.interrupt()
+            self.interrupt()
 
     @task(1)
     class UpdateClient(TaskSet):
@@ -159,19 +164,22 @@ class ClientRegistration(HttpUser):
             c2 = replace(c, clientName=str(uuid4())[:32])
 
             with self.client.put("/oauth2/client", json=c2.to_dict(),
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Updated client: {c2!r}")
                     CLIENTS.add(c2)
                     del c
+                    logging.info(f"Updated client: {c2!r}")
                     r.success()
                 else:
                     CLIENTS.add(c)
                     del c2
-                    logging.warning(f"Client update failed with unexpected status code: {r.status_code}")
-                    r.failure(f"Client update failed with unexpected status code: {r.status_code}")
-                self.interrupt()
+                    failure_str = f"Client update failed with unexpected status code: {r.status_code}"
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
+
         @task(1)
         @tag('error', 'update', '400', 'update_client_400_clientType')
         def update_client_400_clientType(self):
@@ -182,19 +190,20 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
             c2 = replace(c, clientType="none")
             with self.client.put("/oauth2/client", json=c2.to_dict(),
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"Client update with wrong clientType failed as expected, 400")
                     r.success()
                 else:
-                    failstr = str(f"Unexpected status code when updating client with wrong clientType: {r.status_code}")
-                    logging.warning(failstr)
-                    r.failure(failstr)
                     if r.status_code == 200:
                         CLIENTS.discard(c)
+                    failstr = f"Unexpected status code when updating client with wrong clientType: {r.status_code}"
+                    logging.warning(failstr)
+                    r.failure(failstr)
                 del c2
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'update', '400', 'update_client_400_clientProfile')
@@ -206,19 +215,20 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
             c2 = replace(c, clientProfile="none")
             with self.client.put("/oauth2/client", json=c2.to_dict(),
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"Client update with wrong clientProfile failed as expected, 400")
                     r.success()
                 else:
-                    failstr = str(f"Unexpected status code when updating client with wrong clientProfile: {r.status_code}")
-                    logging.warning(failstr)
-                    r.failure(failstr)
                     if r.status_code == 200:
                         CLIENTS.discard(c)
+                    failstr = f"Unexpected status code when updating client with wrong clientProfile: {r.status_code}"
+                    logging.warning(failstr)
+                    r.failure(failstr)
                 del c2
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'update', '404', 'update_client_404_ownerId')
@@ -230,19 +240,20 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
             c2 = replace(c, ownerId="nouser")
             with self.client.put("/oauth2/client", json=c2.to_dict(),
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error(f"Client update with wrong ownerId failed as expected, 400")
                     r.success()
                 else:
-                    failstr = str(f"Unexpected status code when updating client with wrong ownerId: {r.status_code}")
-                    logging.warning(failstr)
-                    r.failure(failstr)
                     if r.status_code == 200:
                         CLIENTS.discard(c)
+                    failstr = f"Unexpected status code when updating client with wrong ownerId: {r.status_code}"
+                    logging.warning(failstr)
+                    r.failure(failstr)
                 del c2
-                self.interrupt()
+            self.interrupt()
 
         @task(1)
         @tag('error', 'update', '404', 'update_client_404_clientId')
@@ -254,17 +265,17 @@ class ClientRegistration(HttpUser):
             c2 = replace(c, clientId="", clientName=str(uuid4())[:32])
 
             with self.client.put("/oauth2/client", json=c2.to_dict(),
-                                 verify=False, allow_redirects=False,
+                                 verify=False,
+                                 allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error(f"Client update without id failed as expected, 404")
                     r.success()
                 else:
-                    failstr = str(f"Unexpected status code when updating client without id: {r.status_code}")
+                    failstr = f"Unexpected status code when updating client without id: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                self.interrupt()
-### Update client end
+            self.interrupt()
 
     @task(1)
     class DeleteClient(TaskSet):
@@ -275,24 +286,33 @@ class ClientRegistration(HttpUser):
                 c = CLIENTS.pop()
             except KeyError:
                 self.interrupt()
-            r = self.client.delete(f"/oauth2/client/{c.clientId}", verify=False, allow_redirects=False)
-            if r.status_code == 200:
-                logging.info(f"Deleted client: {c!r}")
-                del c
-            else:
-                logging.warning('Client deletion did not return code 200')
-                CLIENTS.add(c)
+            with self.client.delete(f"/oauth2/client/{c.clientId}",
+                                    verify=False,
+                                    allow_redirects=False,
+                                    catch_response=True) as r:
+                if r.status_code == 200:
+                    del c
+                    logging.info(f"Deleted client: {c!r}")
+                    r.success()
+                else:
+                    CLIENTS.add(c)
+                    failure_str = 'Client deletion did not return code 200'
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
             self.interrupt()
 
         @task(1)
         @tag('error', 'delete', '404', 'delete_client_404_no_client')
         def delete_client_404_no_client(self):
-            with self.client.delete(f"/oauth2/client/not_a_client_id", verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.delete(f"/oauth2/client/not_a_client_id",
+                                    verify=False,
+                                    allow_redirects=False,
+                                    catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error("Client deletion: error code 404 returned as expected (non-existent user)")
                     r.success()
                 else:
-                    failure_str = "Client deletion: did not return code 404. Instead: " + str(r.status_code)
+                    failure_str = f"Client deletion: did not return code 404. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -306,22 +326,31 @@ class ClientRegistration(HttpUser):
                 c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
-            r = self.client.get(f"/oauth2/client/{c.clientId}", verify=False, allow_redirects=False)
-            if r.status_code == 200:
-                logging.info(f"Got client: {c!r}")
-            else:
-                logging.warning(f'Client get did not return code 200. Instead: {r.status_code}')
+            with self.client.get(f"/oauth2/client/{c.clientId}",
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"Got client: {c!r}")
+                    r.success()
+                else:
+                    failure_str = f'Client get did not return code 200. Instead: {r.status_code}'
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
             self.interrupt()
 
         @task(1)
         @tag('error', 'get', '404', 'get_client_404_no_client')
         def get_client_404_no_client(self):
-            with self.client.get(f"/oauth2/client/none", verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.get(f"/oauth2/client/none",
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error("Tried to get client with bad id, status 404 as expected.")
                     r.success()
                 else:
-                    failure_str = str(f'Get client with bad id got unexpected status code {r.status_code}')
+                    failure_str = f'Get client with bad id got unexpected status code {r.status_code}'
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -331,22 +360,28 @@ class ClientRegistration(HttpUser):
         @task(1)
         @tag('correct', 'get', '200', 'get_client_page_200')
         def get_client_page_200(self):
-            r = self.client.get(f"/oauth2/client", params={'page': '1'}, verify=False, allow_redirects=False)
-            if r.status_code == 200:
-                logging.info(f"Got client page with status_code 200.")
-            else:
-                logging.warning(f'Client page get did not return code 200. Instead: {r.status_code}')
+            with self.client.get(f"/oauth2/client", params={'page': '1'},
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"Got client page with status_code 200.")
+                else:
+                    logging.warning(f'Client page get did not return code 200. Instead: {r.status_code}')
             self.interrupt()
 
         @task(1)
         @tag('error', 'get', '400', 'get_client_page_400_no_page')
         def get_client_page_400_no_page(self):
-            with self.client.get("/oauth2/client", params={}, verify=False, allow_redirects=False, catch_response=True) as r:
+            with self.client.get("/oauth2/client", params={},
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error("Called client page without page, status 400 as expected.")
                     r.success()
                 else:
-                    failure_str = "Client page get did not return code 400. Instead: " + str(r.status_code)
+                    failure_str = f"Client page get did not return code 400. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
