@@ -140,7 +140,7 @@ class UserRegistration(HttpUser):
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.info(f"Password is empty as expected, 400")
+                    logging.info(f"Passwords do not match as expected, 400")
                     r.success()
                 else:
                     failstr = f"Unexpected status code when registering user without matching password: {r.status_code}"
@@ -347,6 +347,7 @@ class UserRegistration(HttpUser):
                                   verify=False, allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 404:
+                    logging.info("Update password for invalid user failed as expected, status code 404")
                     del user
                 else:
                     failure_str = f"Update password did not return code 404. Instead: {r.status_code}"
