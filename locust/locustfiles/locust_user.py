@@ -1,5 +1,8 @@
 from locust import HttpUser, task, TaskSet, tag
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 import logging
 from uuid import uuid4
 from dataclasses import dataclass, field, replace
