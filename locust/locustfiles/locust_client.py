@@ -291,7 +291,6 @@ class ClientRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 200:
-                    del c
                     logging.info(f"Deleted client: {c!r}")
                     r.success()
                 else:
@@ -299,6 +298,7 @@ class ClientRegistration(HttpUser):
                     failure_str = 'Client deletion did not return code 200'
                     logging.warning(failure_str)
                     r.failure(failure_str)
+            del c
             self.interrupt()
 
         @task(1)

@@ -293,9 +293,9 @@ class UserRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 200:
-                    del user
                     logging.info(f"Deleted user: {user!r}")
                     r.success()
+                    del user
                 else:
                     USERS.add(user)
                     failure_str = f'User page get did not return code 200. Instead: {r.status_code}'
@@ -357,9 +357,9 @@ class UserRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 401:
-                    del user
                     logging.error(f"Password confirm not match as expected: {user!r}")
                     r.success()
+                    del user
                 else:
                     if r.status_code == 200:
                         user.switch_password()
@@ -405,8 +405,8 @@ class UserRegistration(HttpUser):
                                   catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error(f"Password confirm not match as expected: {user!r}")
-                    del user
                     r.success()
+                    del user
                 else:
                     failure_str = f"User password confirmation get did not return code 400. Instead: {r.status_code}"
                     logging.warning(failure_str)

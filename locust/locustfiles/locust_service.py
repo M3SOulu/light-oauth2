@@ -145,8 +145,8 @@ class ServiceRegistration(HttpUser):
                                  catch_response=True) as r:
                 if r.status_code == 200:
                     SERVICES.add(service2)
-                    logging.info(f"Updated service: {service2!r}")
                     del service
+                    logging.info(f"Updated service: {service2!r}")
                     r.success()
                 else:
                     SERVICES.add(service)
@@ -217,9 +217,9 @@ class ServiceRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 200:
-                    del service
                     logging.info(f"Deleted service: {service!r}")
                     r.success()
+                    del service
                 else:
                     SERVICES.add(service)
                     failure_str =f'Service deletion did not return 200, instead {r.status_code}'
