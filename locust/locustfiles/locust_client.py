@@ -366,8 +366,11 @@ class ClientRegistration(HttpUser):
                                  catch_response=True) as r:
                 if r.status_code == 200:
                     logging.info(f"Got client page with status_code 200.")
+                    r.success()
                 else:
-                    logging.warning(f'Client page get did not return code 200. Instead: {r.status_code}')
+                    failure_str = f'Client page get did not return code 200. Instead: {r.status_code}'
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
             self.interrupt()
 
         @task(1)
