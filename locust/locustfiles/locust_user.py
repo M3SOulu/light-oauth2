@@ -1,8 +1,6 @@
 from .myset import set_with_choice
-from locust import HttpUser, task, TaskSet, tag
 
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from locust import HttpUser, task, TaskSet, tag
 
 import logging
 from uuid import uuid4
