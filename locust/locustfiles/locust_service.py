@@ -1,3 +1,4 @@
+from .myset import set_with_choice
 from locust import HttpUser, TaskSet, task, tag
 from locust.exception import RescheduleTask
 import logging
@@ -6,7 +7,7 @@ from dataclasses import dataclass, field, replace
 
 __all__ = ['SERVICES', 'Service', 'ServiceRegistration']
 
-SERVICES = set()
+SERVICES = set_with_choice()
 
 
 @dataclass(init=True, repr=True, eq=False)
@@ -74,8 +75,7 @@ class ServiceRegistration(HttpUser):
         @tag('error', 'register', '400')
         def register_service_400_service_id(self):
             try:
-                service = SERVICES.pop()
-                SERVICES.add(service)
+                service = SERVICES.choice()
             except KeyError:
                 self.interrupt()
             with self.client.post("/oauth2/service", data=service.to_dict(),
@@ -154,8 +154,7 @@ class ServiceRegistration(HttpUser):
         @tag('error', 'update', '404')
         def update_service_404_user_id(self):
             try:
-                service = SERVICES.pop()
-                SERVICES.add(service)
+                service = SERVICES.choice()
             except KeyError:
                 self.interrupt()
             service2 = replace(service, serviceId=service.serviceId, serviceType="swagger",
@@ -177,8 +176,7 @@ class ServiceRegistration(HttpUser):
         @tag('error', 'update', '404')
         def update_service_404_service_id(self):
             try:
-                service = SERVICES.pop()
-                SERVICES.add(service)
+                service = SERVICES.choice()
             except KeyError:
                 self.interrupt()
             service2 = replace(service, serviceId="")
@@ -233,8 +231,7 @@ class ServiceRegistration(HttpUser):
         @tag('correct', 'get', '200')
         def get_service_200(self):
             try:
-                service = SERVICES.pop()
-                SERVICES.add(service)
+                service = SERVICES.choice()
             except KeyError:
                 self.interrupt()
             r = self.client.get(f"/oauth2/service/{service.serviceId}", verify=False, allow_redirects=False)

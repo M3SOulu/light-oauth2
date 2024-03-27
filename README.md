@@ -77,30 +77,30 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [ ] `/oauth2/client/{clientId}/service@delete` *delete all endpoints linked to a client*
         - [ ] 200 *correct*
         - [ ] 404 *`clientId` not found*
-- [ ] `oauth2-user` *handle user database*
-    - [ ] `/oauth2/user@post` *create new user*
-        - [ ] 200 *correct*
-        - [ ] 400 *`userId` exists*
-        - [ ] 400 *email exists*
-        - [ ] 400 *password confirmation failed*
-        - [ ] 400 *password empty*
-    - [ ] `/oauth2/user@put` *update user*
-        - [ ] 200 *correct*
-        - [ ] 404 *user not found*
-    - [ ] `/oauth2/user@get` *get all users*
-        - [ ] 200 *correct*
-        - [ ] 400 *`page` parameter missing*
-    - [ ] `/oauth2/user/{userId}@get` *get a user*
-        - [ ] 200 *correct*
-        - [ ] 404 *user not found*
-    - [ ] `/oauth2/user/{userId}@delete` *delete a user*
-        - [ ] 200 *correct*
-        - [ ] 404 *user not found*
-    - [ ] `/oauth2/password/{userId}@post` *update password*
-        - [ ] 200 *correct*
-        - [ ] 404 *user not found*
-        - [ ] 401 *incorrect password*
-        - [ ] 400 *password confirmation failed*
+- [x] `oauth2-user` *handle user database*
+    - [x] `/oauth2/user@post` *create new user*
+        - [x] 200 *correct*
+        - [x] 400 *`userId` exists*
+        - [x] 400 *email exists*
+        - [x] 400 *password confirmation failed*
+        - [x] 400 *password empty*
+    - [x] `/oauth2/user@put` *update user*
+        - [x] 200 *correct*
+        - [x] 404 *user not found*
+    - [x] `/oauth2/user@get` *get all users*
+        - [x] 200 *correct*
+        - [x] 400 *`page` parameter missing*
+    - [x] `/oauth2/user/{userId}@get` *get a user*
+        - [x] 200 *correct*
+        - [x] 404 *user not found*
+    - [x] `/oauth2/user/{userId}@delete` *delete a user*
+        - [x] 200 *correct*
+        - [x] 404 *user not found*
+    - [x] `/oauth2/password/{userId}@post` *update password*
+        - [x] 200 *correct*
+        - [x] 404 *user not found*
+        - [x] 401 *incorrect password*
+        - [x] 400 *password confirmation failed*
 - [ ] `oauth2-code` *authorization code flow*
   - [ ] `oauth2/code@get` *get authorization code*
     - [x] 302 *redirect with authorization code*
