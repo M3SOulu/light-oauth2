@@ -106,6 +106,7 @@ class ServiceRegistration(HttpUser):
                     failure_str = f"Service Registration: did not return code 400 (serviceType). Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
+            del service
             self.interrupt()
 
         @task(1)
@@ -123,6 +124,7 @@ class ServiceRegistration(HttpUser):
                     failure_str = f"Service Registration: did not return code 404. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
+            del service
             self.interrupt()
 
     @task(1)
@@ -175,6 +177,7 @@ class ServiceRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating service with unknown user id: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del service2
             self.interrupt()
 
         @task(1)
@@ -197,6 +200,7 @@ class ServiceRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating service without id: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del service2
             self.interrupt()
 
     @task(1)
@@ -244,7 +248,6 @@ class ServiceRegistration(HttpUser):
         @task(1)
         @tag('correct', 'get', '200', 'get_service_200')
         def get_service_200(self):
-
             try:
                 service = SERVICES.choice()
             except KeyError:

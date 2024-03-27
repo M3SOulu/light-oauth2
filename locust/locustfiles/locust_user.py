@@ -89,6 +89,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user with existing userId: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del userupdate
             self.interrupt()
 
         @task(1) 
@@ -111,6 +112,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del userupdate
             self.interrupt()
 
         @task(1)
@@ -131,6 +133,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user without password: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del user
             self.interrupt()
 
         @task(1)
@@ -150,6 +153,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when registering user without matching password: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del user
             self.interrupt()
 
     # noinspection PyUnboundLocalVariable
@@ -199,6 +203,7 @@ class UserRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating user without id: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del userupdate
             self.interrupt()
                 
     @task(1)
@@ -288,8 +293,8 @@ class UserRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Deleted user: {user!r}")
                     del user
+                    logging.info(f"Deleted user: {user!r}")
                     r.success()
                 else:
                     USERS.add(user)

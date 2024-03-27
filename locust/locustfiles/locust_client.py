@@ -102,7 +102,7 @@ class ClientRegistration(HttpUser):
                     failure_str = f"Client Registration: did not return code 400 (clientType). Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                del c2
+            del c2
             self.interrupt()
 
         @task(1)
@@ -125,7 +125,7 @@ class ClientRegistration(HttpUser):
                     failure_str = f"Client Registration: did not return code 400 (clientProfile). Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                del c2
+            del c2
             self.interrupt()
 
         @task(1)
@@ -147,7 +147,7 @@ class ClientRegistration(HttpUser):
                     failure_str = f"Client Registration: did not return code 404. Instead: {r.status_code}"
                     logging.warning(failure_str)
                     r.failure(failure_str)
-                del c2
+            del c2
             self.interrupt()
 
     @task(1)
@@ -201,7 +201,7 @@ class ClientRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating client with wrong clientType: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                del c2
+            del c2
             self.interrupt()
 
         @task(1)
@@ -226,7 +226,7 @@ class ClientRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating client with wrong clientProfile: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                del c2
+            del c2
             self.interrupt()
 
         @task(1)
@@ -251,7 +251,7 @@ class ClientRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating client with wrong ownerId: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
-                del c2
+            del c2
             self.interrupt()
 
         @task(1)
@@ -274,6 +274,7 @@ class ClientRegistration(HttpUser):
                     failstr = f"Unexpected status code when updating client without id: {r.status_code}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            del c2
             self.interrupt()
 
     @task(1)
