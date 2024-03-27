@@ -62,7 +62,7 @@ class ClientRegistration(HttpUser):
     class RegisterClient(TaskSet):
 
         @task(1)
-        @tag('correct', 'register', '200')
+        @tag('correct', 'register', '200', 'register_client_200')
         def register_client_200(self):
             c = Client(clientId="none", clientSecret="none")
             with self.client.post("/oauth2/client", data=c.to_dict(),
@@ -82,7 +82,7 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '400')
+        @tag('error', 'register', '400', 'register_client_400_clientType')
         def register_client_400_clientType(self):
             try:
                 c = CLIENTS.choice()
@@ -104,7 +104,7 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '400')
+        @tag('error', 'register', '400', 'register_client_400_clientProfile')
         def register_client_400_clientProfile(self):
             try:
                 c = CLIENTS.choice()
@@ -126,8 +126,8 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '404')
-        def register_client_404(self):
+        @tag('error', 'register', '404', 'register_client_404_no_user')
+        def register_client_404_no_user(self):
             try:
                 c = CLIENTS.choice()
             except KeyError:
@@ -146,12 +146,11 @@ class ClientRegistration(HttpUser):
                 del c2
                 self.interrupt()
 
-### Update client start
     @task(1)
     class UpdateClient(TaskSet):
 
         @task(1)
-        @tag('correct', 'update', '200')
+        @tag('correct', 'update', '200', 'update_client_200')
         def update_client_200(self):
             try:
                 c = CLIENTS.pop()
@@ -174,7 +173,7 @@ class ClientRegistration(HttpUser):
                     r.failure(f"Client update failed with unexpected status code: {r.status_code}")
                 self.interrupt()
         @task(1)
-        @tag('error', 'update', '400')
+        @tag('error', 'update', '400', 'update_client_400_clientType')
         def update_client_400_clientType(self):
             try:
                 c = CLIENTS.pop()
@@ -198,7 +197,7 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'update', '400')
+        @tag('error', 'update', '400', 'update_client_400_clientProfile')
         def update_client_400_clientProfile(self):
             try:
                 c = CLIENTS.pop()
@@ -222,7 +221,7 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'update', '404')
+        @tag('error', 'update', '404', 'update_client_404_ownerId')
         def update_client_404_ownerId(self):
             try:
                 c = CLIENTS.pop()
@@ -246,7 +245,7 @@ class ClientRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'update', '404')
+        @tag('error', 'update', '404', 'update_client_404_clientId')
         def update_client_404_clientId(self):
             try:
                 c = CLIENTS.choice()
@@ -270,7 +269,7 @@ class ClientRegistration(HttpUser):
     @task(1)
     class DeleteClient(TaskSet):
         @task(1)
-        @tag('correct', 'delete', '200')
+        @tag('correct', 'delete', '200', 'delete_client_200')
         def delete_client_200(self):
             try:
                 c = CLIENTS.pop()
@@ -286,8 +285,8 @@ class ClientRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'delete', '404')
-        def delete_client_404(self):
+        @tag('error', 'delete', '404', 'delete_client_404_no_client')
+        def delete_client_404_no_client(self):
             with self.client.delete(f"/oauth2/client/not_a_client_id", verify=False, allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error("Client deletion: error code 404 returned as expected (non-existent user)")
@@ -301,7 +300,7 @@ class ClientRegistration(HttpUser):
     @task(1)
     class GetClient(TaskSet):
         @task(1)
-        @tag('correct', 'get', '200')
+        @tag('correct', 'get', '200', 'get_client_200')
         def get_client_200(self):
             try:
                 c = CLIENTS.choice()
@@ -315,8 +314,8 @@ class ClientRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'get', '404')
-        def get_client_404(self):
+        @tag('error', 'get', '404', 'get_client_404_no_client')
+        def get_client_404_no_client(self):
             with self.client.get(f"/oauth2/client/none", verify=False, allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
                     logging.error("Tried to get client with bad id, status 404 as expected.")
@@ -330,7 +329,7 @@ class ClientRegistration(HttpUser):
     @task(1)
     class GetClientPage(TaskSet):
         @task(1)
-        @tag('correct', 'get', '200')
+        @tag('correct', 'get', '200', 'get_client_page_200')
         def get_client_page_200(self):
             r = self.client.get(f"/oauth2/client", params={'page': '1'}, verify=False, allow_redirects=False)
             if r.status_code == 200:
@@ -340,8 +339,8 @@ class ClientRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'get', '400')
-        def get_client_page_400(self):
+        @tag('error', 'get', '400', 'get_client_page_400_no_page')
+        def get_client_page_400_no_page(self):
             with self.client.get("/oauth2/client", params={}, verify=False, allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 400:
                     logging.error("Called client page without page, status 400 as expected.")

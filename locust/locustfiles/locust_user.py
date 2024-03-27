@@ -132,7 +132,7 @@ class UserRegistration(HttpUser):
 
         @task(1)
         @tag('error', 'register', '400', 'register_user_400_password_no_match')
-        def register_user_400_no_match(self):
+        def register_user_400_password_no_match(self):
             user = User()
             req = user.to_dict()
             req['passwordConfirm'] = str(uuid4())
@@ -175,8 +175,8 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'update', '404', 'update_user_404')
-        def update_user_404(self):
+        @tag('error', 'update', '404', 'update_user_404_no_user')
+        def update_user_404_no_user(self):
             try:
                 user = USERS.choice()
             except KeyError:
@@ -212,8 +212,8 @@ class UserRegistration(HttpUser):
             self.interrupt()                  
 
         @task(1)
-        @tag('error', 'get', '404', 'get_user_404')
-        def get_user_404(self):
+        @tag('error', 'get', '404', 'get_user_404_no_user')
+        def get_user_404_no_user(self):
             with self.client.get(f"/oauth2/user/none", verify=False,
                                  allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
@@ -238,8 +238,8 @@ class UserRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'get', '400', 'get_user_page_400')
-        def get_user_page_400(self):
+        @tag('error', 'get', '400', 'get_user_page_400_no_page')
+        def get_user_page_400_no_page(self):
             with self.client.get("/oauth2/user", params={},
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
@@ -272,8 +272,8 @@ class UserRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'delete', '404', 'delete_user_404')
-        def delete_user_404(self):
+        @tag('error', 'delete', '404', 'delete_user_404_no_user')
+        def delete_user_404_no_user(self):
             with self.client.delete(f"/oauth2/user/none", verify=False,
                                     allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
@@ -309,8 +309,8 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'post', '401', 'update_password_wrong_password_401')
-        def update_password_wrong_password_401(self):
+        @tag('error', 'post', '401', 'update_password_401_wrong_password')
+        def update_password_401_wrong_password(self):
             try:
                 user = USERS.choice()
             except KeyError:
@@ -331,8 +331,8 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'post', '404', 'update_password_user_not_found_404')
-        def update_password_user_not_found_404(self):
+        @tag('error', 'post', '404', 'update_password_404_user_not_found')
+        def update_password_404_user_not_found(self):
             try:
                 user = USERS.choice()
             except KeyError:
@@ -350,8 +350,8 @@ class UserRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'post', '400', 'update_password_not_match_400')
-        def update_password_not_match_400(self):
+        @tag('error', 'post', '400', 'update_password_400_not_match')
+        def update_password_400_not_match(self):
             try:
                 user = USERS.choice()
             except KeyError:

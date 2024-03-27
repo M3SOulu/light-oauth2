@@ -54,7 +54,7 @@ class ServiceRegistration(HttpUser):
     class RegisterService(TaskSet):
 
         @task(1)
-        @tag('correct', 'register', '200')
+        @tag('correct', 'register', '200', 'register_service_200')
         def register_service_200(self):
             service = Service()
             with self.client.post("/oauth2/service", data=service.to_dict(),
@@ -72,7 +72,7 @@ class ServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '400')
+        @tag('error', 'register', '400', 'register_service_400_service_id')
         def register_service_400_service_id(self):
             try:
                 service = SERVICES.choice()
@@ -91,7 +91,7 @@ class ServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '400')
+        @tag('error', 'register', '400', 'register_service_400_service_type')
         def register_service_400_service_type(self):
             service = Service(serviceType="none")
             with self.client.post("/oauth2/service", data=service.to_dict(),
@@ -108,8 +108,8 @@ class ServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'register', '404')
-        def register_service_404(self):
+        @tag('error', 'register', '404', 'register_service_404_no_user')
+        def register_service_404_no_user(self):
             service = Service(ownerId="nouser")
             with self.client.post("/oauth2/service", data=service.to_dict(),
                                   verify=False, allow_redirects=False,
@@ -127,7 +127,7 @@ class ServiceRegistration(HttpUser):
     class UpdateService(TaskSet):
 
         @task(1)
-        @tag('correct', 'update', '200')
+        @tag('correct', 'update', '200', 'update_service_200')
         def update_service_200(self):
             try:
                 service = SERVICES.pop()
@@ -151,7 +151,7 @@ class ServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'update', '404')
+        @tag('error', 'update', '404', 'update_service_404_user_id')
         def update_service_404_user_id(self):
             try:
                 service = SERVICES.choice()
@@ -173,7 +173,7 @@ class ServiceRegistration(HttpUser):
                 self.interrupt()
 
         @task(1)
-        @tag('error', 'update', '404')
+        @tag('error', 'update', '404', 'update_service_404_service_id')
         def update_service_404_service_id(self):
             try:
                 service = SERVICES.choice()
@@ -196,7 +196,7 @@ class ServiceRegistration(HttpUser):
     @task(1)
     class DeleteService(TaskSet):            
         @task(1)
-        @tag('correct', 'delete', '200')
+        @tag('correct', 'delete', '200', 'delete_service_200')
         def delete_service_200(self):
             try:
                 service = SERVICES.pop()
@@ -212,8 +212,8 @@ class ServiceRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'delete', '404')
-        def delete_service_404(self):
+        @tag('error', 'delete', '404', 'delete_service_404_no_service')
+        def delete_service_404_no_service(self):
             with self.client.delete(f"/oauth2/service/not_service_id", verify=False,
                                     allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
@@ -228,8 +228,9 @@ class ServiceRegistration(HttpUser):
     @task(1)
     class GetService(TaskSet):
         @task(1)
-        @tag('correct', 'get', '200')
+        @tag('correct', 'get', '200', 'get_service_200')
         def get_service_200(self):
+
             try:
                 service = SERVICES.choice()
             except KeyError:
@@ -242,8 +243,8 @@ class ServiceRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'get', '404')
-        def get_service_404(self):
+        @tag('error', 'get', '404', 'get_service_404_no_service')
+        def get_service_404_no_service(self):
             with self.client.get(f"/oauth2/service/none", verify=False,
                                  allow_redirects=False, catch_response=True) as r:
                 if r.status_code == 404:
@@ -258,7 +259,7 @@ class ServiceRegistration(HttpUser):
     @task(1)
     class GetServicePage(TaskSet):
         @task(1)
-        @tag('correct', 'get', '200')
+        @tag('correct', 'get', '200', 'get_service_page_200')
         def get_service_page_200(self):
             r = self.client.get(f"/oauth2/service", params={'page': '1'}, verify=False, allow_redirects=False)
             if r.status_code == 200:
@@ -268,8 +269,8 @@ class ServiceRegistration(HttpUser):
             self.interrupt()
 
         @task(1)
-        @tag('error', 'get', '400')
-        def get_service_page_400(self):
+        @tag('error', 'get', '400', 'get_service_page_400_no_page')
+        def get_service_page_400_no_page(self):
             with self.client.get("/oauth2/service", params={},
                                  verify=False, allow_redirects=False,
                                  catch_response=True) as r:
