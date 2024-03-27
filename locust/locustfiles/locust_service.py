@@ -1,4 +1,4 @@
-from myset import set_with_choice
+from .myset import set_with_choice
 from locust import HttpUser, TaskSet, task, tag
 from locust.exception import RescheduleTask
 import logging
