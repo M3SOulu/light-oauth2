@@ -38,7 +38,7 @@ class OAuthUser(HttpUser):
             logging.info(f"Access Token Client Credentials Flow: ClientId = {self.cl.clientId}, Access Token = {self.access_token}")
         else:
             r = r.json()
-            logging.info(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
+            logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
                          f"error code is {r['code']}")
         CLIENTS.add(self.cl)
 
@@ -68,7 +68,7 @@ class OAuthUser(HttpUser):
                 self.user.auth_code = redirect_params.get('code')[0]
                 logging.info(f"Auth Code: ClientId = {self.user.cl.clientId}, Authorization_code = {self.user.auth_code}")
             else:
-                logging.info("Auth Code: Endpoint did not redirect")
+                logging.warning("Auth Code: Endpoint did not redirect")
 
         @task
         def access_token_authorization_code_flow(self):
@@ -88,7 +88,7 @@ class OAuthUser(HttpUser):
                     f"Access Token Authorization Code Flow: ClientId = {self.user.cl.clientId}, Access Token = {self.user.access_token}")
             else:
                 r = r.json()
-                logging.info(f"Access Token Authorization Code Flow: Did not get code 200, code is {r['statusCode']}, "
+                logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, code is {r['statusCode']}, "
                              f"error code is {r['code']}")
             self.user.auth_code = None
             self.interrupt()
