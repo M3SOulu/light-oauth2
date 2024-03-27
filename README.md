@@ -11,7 +11,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
 
 # light-oauth2 services, endpoints and response codes TODO list
 
-- [ ] `oauth2-service` *handle service database*
+- [x] `oauth2-service` *handle service database*
     - [x] `/oauth2/service@post` *register new service*
          - [x] 200 *correct*
          - [x] 404 *user not found*
@@ -28,15 +28,15 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] `/oauth2/service{serviceId}@get` *get a service from database*
          - [x] 200 *correct*
          - [x] 404 *`serviceId` not found*
-    - [ ] `/oauth2/service/{serviceId}/endpoint@post` *add endpoints to service*
-         - [ ] 200 *correct*
-         - [ ] 404 *`serviceId` not found*
-    - [ ] `/oauth2/service/{serviceId}/endpoint@delete` *delete endpoints of a service*
-         - [ ] 200 *correct*
-         - [ ] 404 *`serviceId` not found*
-    - [ ]  `/oauth2/service/{serviceId}/endpoint@get` *get endpoints of a service*
-         - [ ] 200 *correct*
-         - [ ] 404 *`serviceId` not found*
+    - [ ] ~~`/oauth2/service/{serviceId}/endpoint@post` *add endpoints to service*~~
+         - [ ] ~~200 *correct*~~
+         - [ ] ~~404 *`serviceId` not found*~~
+    - [ ] ~~`/oauth2/service/{serviceId}/endpoint@delete` *delete endpoints of a service*~~
+         - [ ] ~~200 *correct*~~
+         - [ ] ~~404 *`serviceId` not found*~~
+    - [ ]  ~~`/oauth2/service/{serviceId}/endpoint@get` *get endpoints of a service*~~
+         - [ ] ~~200 *correct*~~
+         - [ ] ~~404 *`serviceId` not found*~~
 - [ ] `oauth2-client` *handle client database*
     - [x] `/oauth2/client@post` *register new client*
         - [x] 200 *correct*
@@ -59,24 +59,24 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] `/oauth2/client/{clientId}@delete` *delete a client from database*
          - [x] 200 *correct*
          - [x] 404 *`serviceId` not found*
-    - [ ] `/oauth2/client/{clientId}/service/{serviceId}@post` *link an endpoint to a client*
-         - [ ] 200 *correct*
-         - [ ] 404 *`clientId` not found*
-         - [ ] 404 *`serviceId` not found*
-    - [ ] `/oauth2/client/{clientId}/service/{serviceId}@delete` *delete linked endpoints of a client*
-         - [ ] 200 *correct*
-         - [ ] 404 *`clientId` not found*
-         - [ ] 404 *`serviceId` not found*
-    - [ ]  `/oauth2/client/{clientId}/service/{serviceId}@get` *get endpoints linked to a client*
-         - [ ] 200 *correct*
-         - [ ] 404 *`clientId` not found*
-         - [ ] 404 *`serviceId` not found*
-    - [ ] `/oauth2/client/{clientId}/service@get` *get all endpoints linked to a client*
-        - [ ] 200 *correct*
-        - [ ] 404 *`clientId` not found*
-    - [ ] `/oauth2/client/{clientId}/service@delete` *delete all endpoints linked to a client*
-        - [ ] 200 *correct*
-        - [ ] 404 *`clientId` not found*
+    - [ ] ~~`/oauth2/client/{clientId}/service/{serviceId}@post` *link an endpoint to a client*~~
+         - [ ] ~~200 *correct*~~
+         - [ ] ~~404 *`clientId` not found*~~
+         - [ ] ~~404 *`serviceId` not found*~~
+    - [ ] ~~`/oauth2/client/{clientId}/service/{serviceId}@delete` *delete linked endpoints of a client*~~
+         - [ ] ~~200 *correct*~~
+         - [ ] ~~404 *`clientId` not found*~~
+         - [ ] ~~404 *`serviceId` not found*~~
+    - [ ]  ~~`/oauth2/client/{clientId}/service/{serviceId}@get` *get endpoints linked to a client*~~
+         - [ ] ~~200 *correct*~~
+         - [ ] ~~404 *`clientId` not found*~~
+         - [ ] ~~404 *`serviceId` not found*~~
+    - [ ] ~~`/oauth2/client/{clientId}/service@get` *get all endpoints linked to a client*~~
+        - [ ] ~~200 *correct*~~
+        - [ ] ~~404 *`clientId` not found*~~
+    - [ ] ~~`/oauth2/client/{clientId}/service@delete` *delete all endpoints linked to a client*~~
+        - [ ] ~~200 *correct*~~
+        - [ ] ~~404 *`clientId` not found*~~
 - [x] `oauth2-user` *handle user database*
     - [x] `/oauth2/user@post` *create new user*
         - [x] 200 *correct*
