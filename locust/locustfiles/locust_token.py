@@ -84,14 +84,14 @@ class OAuthUser(HttpUser):
         self.cl = new_cl
         self.oauth = OAuthFlow(new_cl)
 
-    @tag('client_credentials')
+    @tag('client_credentials_flow')
     @task(1)
     class ClientCredentialsFlow(TaskSet):
 
         def on_start(self):
             self.user.oauth.reset_oauth()
 
-        @tag('correct', '200')
+        @tag('correct', '200', 'access_token_client_credentials_flow_200')
         @task(1)
         def access_token_client_credentials_flow_200(self):
             user: OAuthUser = self.user
@@ -111,55 +111,68 @@ class OAuthUser(HttpUser):
                     failstr = f"{get__name__()} - Did not get code 200, code {r.status_code}, error {r.json()}"
                     logging.warning(failstr)
                     r.failure(failstr)
+            self.interrupt()
 
-    @tag('authorization_code', 'noPKCE')
+    @tag('authorization_code_flow', 'noPKCE')
     @task(1)
     class AuthorizationCodeFlow(SequentialTaskSet):
 
         def on_start(self):
             self.user.oauth.reset_oauth()
 
+        @tag('authorization_code')
         @task(1)
-        def access_code(self):
-            user: OAuthUser = self.user
-            with self.client.get(f"{user.code_host}/oauth2/code",
-                                 params=user.oauth.code_request(),
-                                 auth=('admin', '123456'),
-                                 verify=False,
-                                 allow_redirects=False,
-                                 catch_response=True) as r:
-                if r.status_code == 302:
-                    r.success()
-                    parsed_redirect = urlparse(r.headers['Location'])
-                    redirect_params = parse_qs(parsed_redirect.query)
-                    auth_code = redirect_params.get('code')[0]
-                    user.oauth.authorization_code = auth_code
-                    logging.info(f"{get__name__()} - Got Auth Code: {user.oauth!r}")
-                else:
-                    failstr = (f"{get__name__()} - Auth Code: Endpoint did not redirect, code {r.status_code}, "
-                               f"error {r.json()}")
-                    logging.warning(failstr)
-                    r.failure(failstr)
+        class AuthorizationCode(TaskSet):
+
+            @tag('correct', '302', 'authorization_code_302')
+            @task(1)
+            def authorization_code_302(self):
+                user: OAuthUser = self.user
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                                     params=user.oauth.code_request(),
+                                     auth=('admin', '123456'),
+                                     verify=False,
+                                     allow_redirects=False,
+                                     catch_response=True) as r:
+                    if r.status_code == 302:
+                        r.success()
+                        parsed_redirect = urlparse(r.headers['Location'])
+                        redirect_params = parse_qs(parsed_redirect.query)
+                        auth_code = redirect_params.get('code')[0]
+                        user.oauth.authorization_code = auth_code
+                        logging.info(f"{get__name__()} - Got Auth Code: {user.oauth!r}")
+                    else:
+                        failstr = (f"{get__name__()} - Auth Code: Endpoint did not redirect, code {r.status_code}, "
+                                   f"error {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                        # TODO reschedule to approriate task
+                self.interrupt()
 
         @task(1)
-        def access_token_authorization_code_flow(self):
-            user: OAuthUser = self.user
-            with self.client.post(f"{user.token_host}/oauth2/token",
-                                  data=user.oauth.token_request('authorization_code'),
-                                  auth=(user.oauth.clientId, user.oauth.clientSecret),
-                                  verify=False,
-                                  allow_redirects=False,
-                                  catch_response = True) as r:
-                if r.status_code == 200:
-                    r = r.json()
-                    access_token = r['access_token']
-                    user.oauth.access_token = access_token
-                    logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
-                else:
-                    logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
-            self.interrupt()
+        @tag('access_token')
+        class AccessToken(TaskSet):
 
-    @tag('authorization_code', 'PKCE')
+            @tag('correct', '200', 'access_token_authorization_code_flow_200')
+            @task(1)
+            def access_token_authorization_code_flow_200(self):
+                user: OAuthUser = self.user
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                                      data=user.oauth.token_request('authorization_code'),
+                                      auth=(user.oauth.clientId, user.oauth.clientSecret),
+                                      verify=False,
+                                      allow_redirects=False,
+                                      catch_response = True) as r:
+                    if r.status_code == 200:
+                        r = r.json()
+                        access_token = r['access_token']
+                        user.oauth.access_token = access_token
+                        logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
+                    else:
+                        logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
+                self.interrupt()
+
+    @tag('authorization_code_flow', 'PKCE')
     @task(1)
     class AuthorizationCodeFlowPKCE(SequentialTaskSet):
 
@@ -167,49 +180,61 @@ class OAuthUser(HttpUser):
             self.user.oauth.make_pkce()
             self.user.oauth.reset_oauth()
 
+        @tag('authorization_code')
         @task(1)
-        def access_code_pkce(self):
-            user: OAuthUser = self.user
-            with self.client.get(f"{user.code_host}/oauth2/code",
-                                 params=user.oauth.code_request(pkce=True),
-                                 auth=('admin', '123456'),
-                                 verify=False,
-                                 allow_redirects=False,
-                                 catch_response=True) as r:
-                if r.status_code == 302:
-                    r.success()
-                    parsed_redirect = urlparse(r.headers['Location'])
-                    redirect_params = parse_qs(parsed_redirect.query)
-                    auth_code = redirect_params.get('code')[0]
-                    user.oauth.authorization_code = auth_code
-                    logging.info(f"{get__name__()} - Got Auth Code with PKCE: {user.oauth!r}")
-                else:
-                    failstr = (f"{get__name__()} - Auth Code PKCE: Endpoint did not redirect, code {r.status_code}, "
-                                f"error {r.json()}")
-                    logging.warning(failstr)
-                    r.failure(failstr)
+        class AuthorizationCodePKCE(TaskSet):
 
+            @tag('correct', '302', 'authorization_code_pkce_302')
+            @task(1)
+            def authorization_code_pkce_302(self):
+                user: OAuthUser = self.user
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                                     params=user.oauth.code_request(pkce=True),
+                                     auth=('admin', '123456'),
+                                     verify=False,
+                                     allow_redirects=False,
+                                     catch_response=True) as r:
+                    if r.status_code == 302:
+                        r.success()
+                        parsed_redirect = urlparse(r.headers['Location'])
+                        redirect_params = parse_qs(parsed_redirect.query)
+                        auth_code = redirect_params.get('code')[0]
+                        user.oauth.authorization_code = auth_code
+                        logging.info(f"{get__name__()} - Got Auth Code with PKCE: {user.oauth!r}")
+                    else:
+                        failstr = (f"{get__name__()} - Auth Code PKCE: Endpoint did not redirect, code {r.status_code}, "
+                                    f"error {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                        # TODO reschedule to appropriate task
+                self.interrupt()
+
+        @tag('access_token')
         @task(1)
-        def access_token_authorization_code_flow_pkce(self):
-            user: OAuthUser = self.user
-            with self.client.post(f"{user.token_host}/oauth2/token",
-                                  data=user.oauth.token_request('authorization_code', pkce=True),
-                                  auth=(user.oauth.clientId, user.oauth.clientSecret),
-                                  verify=False,
-                                  allow_redirects=False,
-                                  catch_response=True) as r:
-                if r.status_code == 200:
-                    r.success()
-                    r = r.json()
-                    access_token = r['access_token']
-                    user.oauth.access_token = access_token
-                    logging.info(f"{get__name__()} - Got token with PKCE: {user.oauth!r}")
-                else:
-                    failstr = (f"{get__name__()} - Token endpoint with PKCE: Did not get code 200, "
-                               f"code {r.status_code}, error {r.json()}")
-                    logging.warning(failstr)
-                    r.failure(failstr)
-            self.interrupt()
+        class AccessTokenPKCE(TaskSet):
+
+            @tag('correct', '200', 'access_token_authorization_code_flow_pkce_200')
+            @task(1)
+            def access_token_authorization_code_flow_pkce_200(self):
+                user: OAuthUser = self.user
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                                      data=user.oauth.token_request('authorization_code', pkce=True),
+                                      auth=(user.oauth.clientId, user.oauth.clientSecret),
+                                      verify=False,
+                                      allow_redirects=False,
+                                      catch_response=True) as r:
+                    if r.status_code == 200:
+                        r.success()
+                        r = r.json()
+                        access_token = r['access_token']
+                        user.oauth.access_token = access_token
+                        logging.info(f"{get__name__()} - Got token with PKCE: {user.oauth!r}")
+                    else:
+                        failstr = (f"{get__name__()} - Token endpoint with PKCE: Did not get code 200, "
+                                   f"code {r.status_code}, error {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
 
         def on_stop(self):
             self.user.oauth.reset_pkce()
