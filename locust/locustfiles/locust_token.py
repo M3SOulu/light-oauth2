@@ -1,4 +1,4 @@
-from locust import HttpUser, task, SequentialTaskSet, tag
+from locust import HttpUser, task, SequentialTaskSet, TaskSet, tag
 
 import logging
 from urllib.parse import urlparse, parse_qs
@@ -65,23 +65,27 @@ class OAuthUser(HttpUser):
 
     @tag('client_credentials')
     @task(1)
-    def access_token_client_credentials_flow(self):
-        user: OAuthUser = self.user
-        r = self.client.post(f"{self.token_host}/oauth2/token",
-                             data=user.oauth.token_request('client_credentials'),
-                             auth=(self.oauth.client.clientId, self.oauth.client.clientSecret),
-                             verify=False,
-                             allow_redirects=False)
-        if r.status_code == 200:
-            r = r.json()
-            access_token = r['access_token']
-            self.oauth.access_token = access_token
-            logging.info(f"Access Token Client Credentials Flow: ClientId = {self.oauth.client.clientId},"
-                         f"Access Token = {access_token}")
-        else:
-            r = r.json()
-            logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
-                         f"error code is {r['code']}")
+    class ClientCredentialsFlow(TaskSet):
+
+        @tag('correct', '200')
+        @task(1)
+        def access_token_client_credentials_flow_200(self):
+            user: OAuthUser = self.user
+            r = self.client.post(f"{self.token_host}/oauth2/token",
+                                 data=user.oauth.token_request('client_credentials'),
+                                 auth=(self.oauth.client.clientId, self.oauth.client.clientSecret),
+                                 verify=False,
+                                 allow_redirects=False)
+            if r.status_code == 200:
+                r = r.json()
+                access_token = r['access_token']
+                self.oauth.access_token = access_token
+                logging.info(f"Access Token Client Credentials Flow: ClientId = {self.oauth.client.clientId},"
+                             f"Access Token = {access_token}")
+            else:
+                r = r.json()
+                logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
+                             f"error code is {r['code']}")
 
     @tag('authorization_code')
     @task(1)
