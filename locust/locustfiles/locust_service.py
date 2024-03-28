@@ -1,4 +1,6 @@
 from .myset import set_with_choice
+from .mylogging import get__name__
+
 from locust import HttpUser, TaskSet, task, tag
 import logging
 from uuid import uuid4
@@ -61,13 +63,15 @@ class ServiceRegistration(HttpUser):
                                   catch_response=True) as r:
 
                 if r.status_code == 200:
-                    logging.info(f"Registered service: {service!r}")
+                    logging.info(f"{get__name__()} - Registered service: {service!r}")
                     SERVICES.add(service)
                     r.success()
                 else:
                     del service
-                    logging.warning("Service registration did not return code 200")
-                    r.failure("Service registration did not return code 200")
+                    failstr = (f"{get__name__()} - Service registration did not return 200, code {r.status_code}, "
+                               f"error {r.json()}")
+                    logging.warning(failstr)
+                    r.failure(failstr)
             self.interrupt()
 
         @task(1)
@@ -82,10 +86,11 @@ class ServiceRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error("Service Registration: error code 400 returned as expected (existing serviceId )")
+                    logging.error(f"{get__name__()} - Service Registration: error code 400 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Service Registration: did not return code 400 (serviceId). Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Service Registration: did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -100,10 +105,11 @@ class ServiceRegistration(HttpUser):
                                   catch_response=True) as r:
 
                 if r.status_code == 400:
-                    logging.error(f"Service Registration: error code 400 returned as expected (wrong serviceType)")
+                    logging.error(f"{get__name__()} - Service Registration: error code 400 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Service Registration: did not return code 400 (serviceType). Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Service Registration: did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             del service
@@ -118,10 +124,11 @@ class ServiceRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Service Registration: error code 404 returned as expected (non-existent user)")
+                    logging.error(f"{get__name__()} - Service Registration: error code 404 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Service Registration: did not return code 404. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Service Registration: did not return code 404, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             del service
@@ -146,12 +153,13 @@ class ServiceRegistration(HttpUser):
                 if r.status_code == 200:
                     SERVICES.add(service2)
                     del service
-                    logging.info(f"Updated service: {service2!r}")
+                    logging.info(f"{get__name__()} - Updated service: {service2!r}")
                     r.success()
                 else:
                     SERVICES.add(service)
                     del service2
-                    failure_str = f"Service update failed with unexpected status code: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Service update failed with unexpected status code: {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -171,10 +179,10 @@ class ServiceRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error(f"service update with unknown user id failed as expected, 404")
+                    logging.error(f"{get__name__()} - Service update with unknown user id failed as expected, 404")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when updating service with unknown user id: {r.status_code}"
+                    failstr = f"{get__name__()} - Unexpected status code {r.status_code}, error {r.json()}"
                     logging.warning(failstr)
                     r.failure(failstr)
             del service2
@@ -194,10 +202,11 @@ class ServiceRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error(f"service update without id failed as expected, 404")
+                    logging.error(f"{get__name__()} - Service update without id failed as expected, 404")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when updating service without id: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when updating service without id, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del service2
@@ -217,12 +226,13 @@ class ServiceRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Deleted service: {service!r}")
+                    logging.info(f"{get__name__()} - Deleted service: {service!r}")
                     r.success()
                     del service
                 else:
                     SERVICES.add(service)
-                    failure_str =f'Service deletion did not return 200, instead {r.status_code}'
+                    failure_str =(f'{get__name__()} - Service deletion did not return 200, code {r.status_code}, '
+                                  f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -235,10 +245,11 @@ class ServiceRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("service deletion: error code 404 returned as expected")
+                    logging.error(f"{get__name__()} - Service deletion: error code 404 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Service deletion: did not return code 404. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Service deletion: did not return code 404, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -257,10 +268,11 @@ class ServiceRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Got service: {service!r}")
+                    logging.info(f"{get__name__()} - Got service: {service!r}")
                     r.success()
                 else:
-                    failure_str = f'Service get did not return code 200. Instead: {r.status_code}'
+                    failure_str = (f'{get__name__()} - Service get did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -273,10 +285,11 @@ class ServiceRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Tried to get the service with bad id, status 404 as expected.")
+                    logging.error(f"{get__name__()} - Tried to get the service with bad id, status 404 as expected")
                     r.success()
                 else:
-                    failure_str = f'Get service with bad id got unexpected status code {r.status_code}'
+                    failure_str = (f'{get__name__()}- Get service with bad id got unexpected status code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -291,10 +304,11 @@ class ServiceRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Got service page with status_code 200.")
+                    logging.info(f"{get__name__()} - Got service page with status_code 200")
                     r.success()
                 else:
-                    failure_str =f'Service page get did not return code 200. Instead: {r.status_code}'
+                    failure_str =(f'{get__name__()} - Service page get did not return code 200, code {r.status_code}, '
+                                  f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -307,10 +321,11 @@ class ServiceRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error("Called service page without page, status 400 as expected.")
+                    logging.error(f"{get__name__()} - Called service page without page, status 400 as expected")
                     r.success()
                 else:
-                    failure_str = f"service page get did not return code 400. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - service page get did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
