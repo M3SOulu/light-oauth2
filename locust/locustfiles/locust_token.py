@@ -100,12 +100,9 @@ class OAuthUser(HttpUser):
                 r = r.json()
                 access_token = r['access_token']
                 user.oauth.access_token = access_token
-                logging.info(f"Access Token Client Credentials Flow: ClientId = {user.oauth.clientId},"
-                             f"Access Token = {access_token}")
+                logging.info(f"Access Token Client Credentials Flow: {user.oauth!r}")
             else:
-                r = r.json()
-                logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
-                                f"error code is {r['code']}")
+                logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, error {r.json()}")
 
     @tag('authorization_code', 'noPKCE')
     @task(1)
@@ -127,10 +124,9 @@ class OAuthUser(HttpUser):
                 redirect_params = parse_qs(parsed_redirect.query)
                 auth_code = redirect_params.get('code')[0]
                 user.oauth.authorization_code = auth_code
-                logging.info(f"Auth Code: ClientId = {user.oauth.clientId}, Authorization_code = {auth_code}")
+                logging.info(f"Auth Code: {user.oauth!r}")
             else:
-                r = r.json()
-                logging.warning(f"Auth Code: Endpoint did not redirect, got code {r['statusCode']}, message {r['message']}")
+                logging.warning(f"Auth Code: Endpoint did not redirect, error {r.json()}")
 
         @task(1)
         def access_token_authorization_code_flow(self):
@@ -144,12 +140,9 @@ class OAuthUser(HttpUser):
                 r = r.json()
                 access_token = r['access_token']
                 user.oauth.access_token = access_token
-                logging.info(f"Access Token Authorization Code Flow: ClientId = {user.oauth.clientId},"
-                             f"Access Token = {access_token}")
+                logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
             else:
-                r = r.json()
-                logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, code is {r['statusCode']}, "
-                                f"error code is {r['code']}")
+                logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
             self.interrupt()
 
     @tag('authorization_code', 'PKCE')
@@ -173,10 +166,9 @@ class OAuthUser(HttpUser):
                 redirect_params = parse_qs(parsed_redirect.query)
                 auth_code = redirect_params.get('code')[0]
                 user.oauth.authorization_code = auth_code
-                logging.info(f"Auth Code PKCE: ClientId = {user.oauth.clientId}, Authorization_code = {auth_code}")
+                logging.info(f"Auth Code PKCE: {user.oauth!r}")
             else:
-                r = r.json()
-                logging.warning(f"Auth Code PKCE: Endpoint did not redirect, got code {r['statusCode']}, message {r['message']}")
+                logging.warning(f"Auth Code PKCE: Endpoint did not redirect, error {r.json()}")
 
         @task(1)
         def access_token_authorization_code_flow_pkce(self):
@@ -190,12 +182,9 @@ class OAuthUser(HttpUser):
                 r = r.json()
                 access_token = r['access_token']
                 user.oauth.access_token = access_token
-                logging.info(f"Access Token Authorization Code Flow PKCE: ClientId = {user.oauth.clientId},"
-                             f"Access Token = {access_token}")
+                logging.info(f"Access Token Authorization Code Flow PKCE: {user.oauth!r}")
             else:
-                r = r.json()
-                logging.warning(f"Access Token Authorization Code Flow PKCE: Did not get code 200, code is {r['statusCode']}, "
-                                f"error code is {r['code']}")
+                logging.warning(f"Access Token Authorization Code Flow PKCE: Did not get code 200, error {r.json()}")
             self.interrupt()
 
         def on_stop(self):
