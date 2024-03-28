@@ -66,8 +66,9 @@ class UserRegistration(HttpUser):
                     r.success()
                 else:
                     del user
-                    logging.warning(f"User registration did not return code 200, instead {r.status_code}, {r.text}")
-                    r.failure("User registration did not return code 200")
+                    failure_str = f"{get__name__()} did not return code 200, code {r.status_code}, error {r.json()}"
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
                 self.interrupt()
 
         @task(1) 
@@ -84,10 +85,11 @@ class UserRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error(f"UserId exists as expected, 400")
+                    logging.error(f"{get__name__()} - UserId exists as expected, 400")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when registering user with existing userId: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when registering user with existing userId, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del userupdate
@@ -107,10 +109,11 @@ class UserRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error(f"Email exists already as expected, 400")
+                    logging.error(f"{get__name__()} - Email exists already as expected, 400")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when registering user with existing email: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when registering user with existing email, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del userupdate
@@ -128,10 +131,11 @@ class UserRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error(f"Password is empty as expected, 400")
+                    logging.error(f"{get__name__()} - Password is empty as expected, 400")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when registering user without password: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when registering user without password, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del user
@@ -148,16 +152,16 @@ class UserRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error(f"Passwords do not match as expected, 400")
+                    logging.error(f"{get__name__()} - Passwords do not match as expected, 400")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when registering user without matching password: {r.status_code}"
+                    failstr = (f"{get__name__()}  - Unexpected status code when registering user without matching "
+                               f"password, code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del user
             self.interrupt()
 
-    # noinspection PyUnboundLocalVariable
     @task(1)
     class UpdateUser(TaskSet):
         @task(1)
@@ -180,8 +184,9 @@ class UserRegistration(HttpUser):
                 else:
                     USERS.add(user)
                     del user2
-                    logging.warning(f"User updation did not return code 200, instead {r.status_code}, {r.text}")
-                    r.failure(f"User updation did not return code 200", {r.status_code})
+                    failstr = f"{get__name__()} - Did not return code 200, code {r.status_code}, error {r.json()}"
+                    logging.warning(failstr)
+                    r.failure(failstr)
             self.interrupt()
 
         @task(1)
@@ -198,10 +203,11 @@ class UserRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error(f"User update without id failed as expected, 404")
+                    logging.error(f"{get__name__()} - User update without id failed as expected, 404")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when updating user without id: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when updating user without id, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del userupdate
@@ -224,7 +230,7 @@ class UserRegistration(HttpUser):
                     logging.info(f"{get__name__()} - Got user: {user!r}")
                     r.success()
                 else:
-                    failure_str = f'User get did not return code 200. Instead: {r.status_code}'
+                    failure_str = f'{get__name__()} - Did not return code 200, code {r.status_code}, error {r.json()}'
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()                  
@@ -237,10 +243,11 @@ class UserRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Tried to get the user with bad id, status 404 as expected.")
+                    logging.error(f"{get__name__()} - Tried to get the user with bad id, status 404 as expected")
                     r.success()
                 else:
-                    failure_str = f'Get user with bad id got unexpected status code {r.status_code}'
+                    failure_str = (f'{get__name__()} - Get user with bad id got unexpected status code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -255,10 +262,11 @@ class UserRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Got user page with status_code 200.")
+                    logging.info(f"{get__name__()} - Got user page with status_code 200.")
                     r.success()
                 else:
-                    failure_str = f'User page get did not return code 200. Instead: {r.status_code}'
+                    failure_str = (f'{get__name__()} - User page get did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -271,10 +279,11 @@ class UserRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error("Called user page without page, status 400 as expected.")
+                    logging.error(f"{get__name__()} - Called user page without page, status 400 as expected")
                     r.success()
                 else:
-                    failure_str = f"user page get did not return code 400. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - user page get did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -299,7 +308,8 @@ class UserRegistration(HttpUser):
                     del user
                 else:
                     USERS.add(user)
-                    failure_str = f'User page get did not return code 200. Instead: {r.status_code}'
+                    failure_str = (f'{get__name__()} - User page get did not return code 200., code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -312,10 +322,11 @@ class UserRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Tried to delete the user with bad id, status 404 as expected.")
+                    logging.error(f"{get__name__()} - Tried to delete the user with bad id, status 404 as expected.")
                     r.success()
                 else:
-                    failure_str = f'Delete user with bad id got unexpected status code {r.status_code}'
+                    failure_str = (f'{get__name__()} - Delete user with bad id got unexpected status code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -339,7 +350,8 @@ class UserRegistration(HttpUser):
                     logging.info(f"{get__name__()} - Updated user password: {user!r}")
                     r.success()
                 else:
-                    failure_str = f"User password update get did not return code 200. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - User password update get did not return code 200, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -358,13 +370,14 @@ class UserRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 401:
-                    logging.error(f"Password confirm not match as expected: {user!r}")
+                    logging.error(f"{get__name__()} - Password confirm not match as expected, 401")
                     r.success()
                     del user
                 else:
                     if r.status_code == 200:
                         user.switch_password()
-                    failure_str = f"User password confirmation get did not return code 401. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - User password confirmation get did not return code 401, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -383,10 +396,11 @@ class UserRegistration(HttpUser):
                                   catch_response=True) as r:
                 if r.status_code == 404:
                     del user
-                    logging.error("Update password for invalid user failed as expected, status code 404")
+                    logging.error(f"{get__name__()} - Update password for invalid user failed as expected, 404")
                     r.success()
                 else:
-                    failure_str = f"Update password did not return code 404. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Update password did not return code 404, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -405,11 +419,12 @@ class UserRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error(f"Password confirm not match as expected: {user!r}")
+                    logging.error(f"{get__name__()} - Password confirm not match as expected: {user!r}")
                     r.success()
                     del user
                 else:
-                    failure_str = f"User password confirmation get did not return code 400. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - User password confirmation get did not return code 400, "
+                                   f"code {r.status_code}, error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
