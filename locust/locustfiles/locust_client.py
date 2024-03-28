@@ -1,4 +1,6 @@
 from .myset import set_with_choice
+from .mylogging import get__name__
+
 from locust import HttpUser, task, TaskSet, tag
 
 import logging
@@ -73,11 +75,12 @@ class ClientRegistration(HttpUser):
                     c.clientId = t['clientId']
                     c.clientSecret = t['clientSecret']
                     CLIENTS.add(c)
-                    logging.info(f"Registered client: {c!r}")
+                    logging.info(f"{get__name__()} - Registered client: {c!r}")
                     r.success()
                 else:
                     del c
-                    failure_str = "Client registration did not return code 200"
+                    failure_str = (f"{get__name__()} - Client registration did not return code 200, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -96,10 +99,11 @@ class ClientRegistration(HttpUser):
                                   catch_response=True) as r:
 
                 if r.status_code == 400:
-                    logging.error(f"Client Registration: error code 400 returned as expected (wrong clientType)")
+                    logging.error(f"{get__name__()} - Client Registration: error code 400 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Client Registration: did not return code 400 (clientType). Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Client Registration: did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             del c2
@@ -119,10 +123,11 @@ class ClientRegistration(HttpUser):
                                   catch_response=True) as r:
 
                 if r.status_code == 400:
-                    logging.error(f"Client Registration: error code 400 returned as expected (wrong clientProfile)")
+                    logging.error(f"{get__name__()} - Client Registration: error code 400 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Client Registration: did not return code 400 (clientProfile). Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Client Registration: did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             del c2
@@ -141,10 +146,11 @@ class ClientRegistration(HttpUser):
                                   allow_redirects=False,
                                   catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Client Registration: error code 404 returned as expected (non-existent user)")
+                    logging.error(f"{get__name__()} - Registration: error code 404 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Client Registration: did not return code 404. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Client Registration: did not return code 404, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             del c2
@@ -169,12 +175,13 @@ class ClientRegistration(HttpUser):
                 if r.status_code == 200:
                     CLIENTS.add(c2)
                     del c
-                    logging.info(f"Updated client: {c2!r}")
+                    logging.info(f"{get__name__()} - Updated client: {c2!r}")
                     r.success()
                 else:
                     CLIENTS.add(c)
                     del c2
-                    failure_str = f"Client update failed with unexpected status code: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Client update failed with unexpected status code: {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -193,12 +200,13 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error(f"Client update with wrong clientType failed as expected, 400")
+                    logging.error(f"{get__name__()} - Client update with wrong clientType failed as expected, 400")
                     r.success()
                 else:
                     if r.status_code == 200:
                         CLIENTS.discard(c)
-                    failstr = f"Unexpected status code when updating client with wrong clientType: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when updating client with wrong clientType, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del c2
@@ -218,12 +226,13 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error(f"Client update with wrong clientProfile failed as expected, 400")
+                    logging.error(f"{get__name__()} - Client update with wrong clientProfile failed as expected, 400")
                     r.success()
                 else:
                     if r.status_code == 200:
                         CLIENTS.discard(c)
-                    failstr = f"Unexpected status code when updating client with wrong clientProfile: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when updating client with wrong clientProfile, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del c2
@@ -243,12 +252,13 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error(f"Client update with wrong ownerId failed as expected, 400")
+                    logging.error(f"{get__name__()} - Client update with wrong ownerId failed as expected, 400")
                     r.success()
                 else:
                     if r.status_code == 200:
                         CLIENTS.discard(c)
-                    failstr = f"Unexpected status code when updating client with wrong ownerId: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when updating client with wrong ownerId, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del c2
@@ -268,10 +278,11 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error(f"Client update without id failed as expected, 404")
+                    logging.error(f"{get__name__()} - Client update without id failed as expected, 404")
                     r.success()
                 else:
-                    failstr = f"Unexpected status code when updating client without id: {r.status_code}"
+                    failstr = (f"{get__name__()} - Unexpected status code when updating client without id, "
+                               f"code {r.status_code}, error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
             del c2
@@ -291,11 +302,12 @@ class ClientRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Deleted client: {c!r}")
+                    logging.info(f"{get__name__()} - Deleted client: {c!r}")
                     r.success()
                 else:
                     CLIENTS.add(c)
-                    failure_str = 'Client deletion did not return code 200'
+                    failure_str = (f'{get__name__()} - Client deletion did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             del c
@@ -309,10 +321,11 @@ class ClientRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Client deletion: error code 404 returned as expected (non-existent user)")
+                    logging.error(f"{get__name__()} - Client deletion: error code 404 returned as expected")
                     r.success()
                 else:
-                    failure_str = f"Client deletion: did not return code 404. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Client deletion: did not return code 404, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -331,10 +344,11 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Got client: {c!r}")
+                    logging.info(f"{get__name__()} - Got client: {c!r}")
                     r.success()
                 else:
-                    failure_str = f'Client get did not return code 200. Instead: {r.status_code}'
+                    failure_str = (f'{get__name__()}- Client get did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -347,10 +361,11 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 404:
-                    logging.error("Tried to get client with bad id, status 404 as expected.")
+                    logging.error(f"{get__name__()} - Tried to get client with bad id, status 404 as expected.")
                     r.success()
                 else:
-                    failure_str = f'Get client with bad id got unexpected status code {r.status_code}'
+                    failure_str = (f'{get__name__()} - Get client with bad id got unexpected status code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -365,10 +380,11 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Got client page with status_code 200.")
+                    logging.info(f"{get__name__()} - Got client page with status_code 200")
                     r.success()
                 else:
-                    failure_str = f'Client page get did not return code 200. Instead: {r.status_code}'
+                    failure_str = (f'{get__name__()} - Client page get did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
@@ -381,10 +397,11 @@ class ClientRegistration(HttpUser):
                                  allow_redirects=False,
                                  catch_response=True) as r:
                 if r.status_code == 400:
-                    logging.error("Called client page without page, status 400 as expected.")
+                    logging.error(f"{get__name__()} - Called client page without page, status 400 as expected.")
                     r.success()
                 else:
-                    failure_str = f"Client page get did not return code 400. Instead: {r.status_code}"
+                    failure_str = (f"{get__name__()} - Client page get did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
                     logging.warning(failure_str)
                     r.failure(failure_str)
             self.interrupt()
