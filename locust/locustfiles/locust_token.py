@@ -4,8 +4,9 @@ import logging
 from urllib.parse import urlparse, parse_qs
 from uuid import uuid4
 from hashlib import sha256
-from base64 import b64encode
+from base64 import urlsafe_b64encode
 from dataclasses import dataclass, field
+from os import urandom
 
 from .locust_client import CLIENTS, Client
 
@@ -18,15 +19,15 @@ class OAuthFlow:
     authorization_code: str = field(init=False)
     access_token: str = field(init=False)
     refresh_token: str = field(init=False)
-    PKCE_code_challenge: bytes = field(init=False)
+    PKCE_code_challenge: str = field(init=False)
     PKCE_code_challenge_method: str = field(init=False)
     PKCE_code_verifier: str = field(init=False)
 
-    def make_pkce(self, method='S256'):
-        self.PKCE_code_verifier = str(uuid4()) + str(uuid4)
+    def make_pkce(self, *, method='S256', length=64):
+        self.PKCE_code_verifier = urlsafe_b64encode(urandom(length)).decode('utf-8').rstrip('=')
         self.PKCE_code_challenge_method = method
         if method == 'S256':
-            self.PKCE_code_challenge = b64encode(sha256(self.PKCE_code_verifier.encode('utf-8')).digest())
+            self.PKCE_code_challenge = urlsafe_b64encode(sha256(self.PKCE_code_verifier.encode('utf-8')).digest()).decode('utf-8').rstrip('=')
 
     def code_request(self, pkce: bool = False) -> dict[str, str]:
         request = {"response_type": "code",
