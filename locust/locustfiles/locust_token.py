@@ -87,7 +87,7 @@ class OAuthUser(HttpUser):
                 logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
                                 f"error code is {r['code']}")
 
-    @tag('authorization_code')
+    @tag('authorization_code', 'noPKCE')
     @task(1)
     class AuthorizationCodeFlow(SequentialTaskSet):
 
