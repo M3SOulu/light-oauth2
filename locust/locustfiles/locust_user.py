@@ -1,4 +1,5 @@
 from .myset import set_with_choice
+from .mylogging import get__name__
 
 from locust import HttpUser, task, TaskSet, tag
 
@@ -60,7 +61,7 @@ class UserRegistration(HttpUser):
                                   catch_response=True) as r:
 
                 if r.status_code == 200:
-                    logging.info(f"Registered user: {user!r}")
+                    logging.info(f"{get__name__()} - Registered user: {user!r}")
                     USERS.add(user)
                     r.success()
                 else:
@@ -174,7 +175,7 @@ class UserRegistration(HttpUser):
                 if r.status_code == 200:
                     USERS.add(user2)
                     del user
-                    logging.info(f"Updated user: {user2!r}")
+                    logging.info(f"{get__name__()} - Updated user: {user2!r}")
                     r.success()
                 else:
                     USERS.add(user)
@@ -220,7 +221,7 @@ class UserRegistration(HttpUser):
                                 allow_redirects=False,
                                 catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Got user: {user!r}")
+                    logging.info(f"{get__name__()} - Got user: {user!r}")
                     r.success()
                 else:
                     failure_str = f'User get did not return code 200. Instead: {r.status_code}'
@@ -293,7 +294,7 @@ class UserRegistration(HttpUser):
                                     allow_redirects=False,
                                     catch_response=True) as r:
                 if r.status_code == 200:
-                    logging.info(f"Deleted user: {user!r}")
+                    logging.info(f"{get__name__()} - Deleted user: {user!r}")
                     r.success()
                     del user
                 else:
@@ -335,7 +336,7 @@ class UserRegistration(HttpUser):
                                   catch_response=True) as r:
                 if r.status_code == 200:
                     user.switch_password()
-                    logging.info(f"Updated user password: {user!r}")
+                    logging.info(f"{get__name__()} - Updated user password: {user!r}")
                     r.success()
                 else:
                     failure_str = f"User password update get did not return code 200. Instead: {r.status_code}"
