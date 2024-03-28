@@ -48,7 +48,7 @@ class OAuthFlow:
 
     def code_request(self, pkce: bool = False) -> dict[str, str]:
         request = {"response_type": "code",
-                   "client_id": self.client.clientId,
+                   "client_id": self.clientId,
                    "redirect_uri": "http://localhost:8080/authorization"}
         if pkce:
             request["code_challenge"] = self.PKCE_code_challenge,
