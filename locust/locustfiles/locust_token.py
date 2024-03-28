@@ -8,6 +8,7 @@ from hashlib import sha256
 from base64 import urlsafe_b64encode
 from dataclasses import dataclass, field, InitVar
 from os import urandom
+from time import sleep
 
 from .locust_client import CLIENTS, Client
 
@@ -70,6 +71,7 @@ class OAuthUser(HttpUser):
     host = "https://localhost:6882"
 
     def on_start(self):
+        sleep(1.)
         self.token_host = "https://localhost:6882"
         self.code_host = "https://localhost:6881"
         self.cl = CLIENTS.pop()
