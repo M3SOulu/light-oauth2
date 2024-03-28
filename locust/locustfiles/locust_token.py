@@ -19,11 +19,11 @@ class OAuthFlow:
     authorization_code: str = field(init=False)
     access_token: str = field(init=False)
     refresh_token: str = field(init=False)
-    PKCE_code_challenge: str = field(init=False)
-    PKCE_code_challenge_method: str = field(init=False)
-    PKCE_code_verifier: str = field(init=False)
+    PKCE_code_challenge: str = field(default=None, init=False)
+    PKCE_code_challenge_method: str = field(default=None, init=False)
+    PKCE_code_verifier: str = field(default=None, init=False)
 
-    def make_pkce(self, *, method='S256', length=64):
+    def make_pkce(self, *, method: str = 'S256', length: int = 64) -> None:
         self.PKCE_code_verifier = urlsafe_b64encode(urandom(length)).decode('utf-8').rstrip('=')
         self.PKCE_code_challenge_method = method
         if method == 'S256':
