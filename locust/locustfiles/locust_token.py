@@ -1,5 +1,4 @@
-from locust import HttpUser, task, SequentialTaskSet
-from locust.exception import RescheduleTask
+from locust import HttpUser, task, SequentialTaskSet, tag
 
 import logging
 from urllib.parse import urlparse, parse_qs
@@ -64,6 +63,7 @@ class OAuthUser(HttpUser):
         CLIENTS.add(self.oauth.client)
         self.oauth = OAuthFlow(new_cl)
 
+    @tag('client_credentials')
     @task(1)
     def access_token_client_credentials_flow(self):
         user: OAuthUser = self.user
@@ -83,6 +83,7 @@ class OAuthUser(HttpUser):
             logging.warning(f"Access Token Client Credentials Flow: Did not get code 200, code is {r['statusCode']}, "
                          f"error code is {r['code']}")
 
+    @tag('authorization_code')
     @task(1)
     class AuthorizationCodeFlow(SequentialTaskSet):
 
@@ -123,6 +124,7 @@ class OAuthUser(HttpUser):
                              f"error code is {r['code']}")
             self.interrupt()
 
+    @tag('authorization_code', 'PKCE')
     @task(1)
     class AuthorizationCodeFlowPKCE(SequentialTaskSet):
 
