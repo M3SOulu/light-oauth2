@@ -2,10 +2,9 @@ from locust import HttpUser, task, SequentialTaskSet, TaskSet, tag
 
 import logging
 from urllib.parse import urlparse, parse_qs
-from uuid import uuid4
 from hashlib import sha256
 from base64 import urlsafe_b64encode
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from os import urandom
 
 from .locust_client import CLIENTS, Client
@@ -13,15 +12,21 @@ from .locust_client import CLIENTS, Client
 __all__ = ['OAuthUser']
 
 
-@dataclass(init=True, repr=False, eq=False)
+@dataclass(init=True, repr=True, eq=False)
 class OAuthFlow:
-    client: Client
-    authorization_code: str = field(init=False)
-    access_token: str = field(init=False)
-    refresh_token: str = field(init=False)
-    PKCE_code_challenge: str = field(default=None, init=False)
-    PKCE_code_challenge_method: str = field(default=None, init=False)
-    PKCE_code_verifier: str = field(default=None, init=False)
+    client: InitVar[Client]
+    clientId: str = field(init=False, repr=True)
+    clientSecret: str = field(init=False, repr=False)
+    authorization_code: str = field(default=None, init=False, repr=True)
+    access_token: str = field(default=None, init=False, repr=True)
+    refresh_token: str = field(default=None, init=False, repr=True)
+    PKCE_code_challenge: str = field(default=None, init=False, repr=True)
+    PKCE_code_challenge_method: str = field(default=None, init=False, repr=True)
+    PKCE_code_verifier: str = field(default=None, init=False, repr=True)
+
+    def __post_init__(self, client: Client):
+        self.clientId = client.clientId
+        self.clientSecret = client.clientSecret
 
     def make_pkce(self, *, method: str = 'S256', length: int = 64) -> None:
         self.PKCE_code_verifier = urlsafe_b64encode(urandom(length)).decode('utf-8').rstrip('=')
@@ -55,13 +60,14 @@ class OAuthUser(HttpUser):
     def on_start(self):
         self.token_host = "https://localhost:6882"
         self.code_host = "https://localhost:6881"
-        cl = CLIENTS.pop()
-        self.oauth = OAuthFlow(cl)
+        self.cl = CLIENTS.pop()
+        self.oauth = OAuthFlow(self.cl)
 
     @task(0)
     def change_client(self):
         new_cl = CLIENTS.pop()
-        CLIENTS.add(self.oauth.client)
+        CLIENTS.add(self.cl)
+        self.cl = new_cl
         self.oauth = OAuthFlow(new_cl)
 
     @tag('client_credentials')
@@ -74,14 +80,14 @@ class OAuthUser(HttpUser):
             user: OAuthUser = self.user
             r = self.client.post(f"{user.token_host}/oauth2/token",
                                  data=user.oauth.token_request('client_credentials'),
-                                 auth=(user.oauth.client.clientId, user.oauth.client.clientSecret),
+                                 auth=(user.oauth.clientId, user.oauth.clientSecret),
                                  verify=False,
                                  allow_redirects=False)
             if r.status_code == 200:
                 r = r.json()
                 access_token = r['access_token']
                 user.oauth.access_token = access_token
-                logging.info(f"Access Token Client Credentials Flow: ClientId = {user.oauth.client.clientId},"
+                logging.info(f"Access Token Client Credentials Flow: ClientId = {user.oauth.clientId},"
                              f"Access Token = {access_token}")
             else:
                 r = r.json()
@@ -105,7 +111,7 @@ class OAuthUser(HttpUser):
                 redirect_params = parse_qs(parsed_redirect.query)
                 auth_code = redirect_params.get('code')[0]
                 user.oauth.authorization_code = auth_code
-                logging.info(f"Auth Code: ClientId = {user.oauth.client.clientId}, Authorization_code = {auth_code}")
+                logging.info(f"Auth Code: ClientId = {user.oauth.clientId}, Authorization_code = {auth_code}")
             else:
                 r = r.json()
                 logging.warning(f"Auth Code: Endpoint did not redirect, got code {r['statusCode']}, message {r['message']}")
@@ -115,14 +121,14 @@ class OAuthUser(HttpUser):
             user: OAuthUser = self.user
             r = self.client.post(f"{user.token_host}/oauth2/token",
                                  data=user.oauth.token_request('authorization_code'),
-                                 auth=(user.oauth.client.clientId, user.oauth.client.clientSecret),
+                                 auth=(user.oauth.clientId, user.oauth.clientSecret),
                                  verify=False,
                                  allow_redirects=False)
             if r.status_code == 200:
                 r = r.json()
                 access_token = r['access_token']
                 user.oauth.access_token = access_token
-                logging.info(f"Access Token Authorization Code Flow: ClientId = {user.oauth.client.clientId},"
+                logging.info(f"Access Token Authorization Code Flow: ClientId = {user.oauth.clientId},"
                              f"Access Token = {access_token}")
             else:
                 r = r.json()
@@ -150,7 +156,7 @@ class OAuthUser(HttpUser):
                 redirect_params = parse_qs(parsed_redirect.query)
                 auth_code = redirect_params.get('code')[0]
                 user.oauth.authorization_code = auth_code
-                logging.info(f"Auth Code PKCE: ClientId = {user.oauth.client.clientId}, Authorization_code = {auth_code}")
+                logging.info(f"Auth Code PKCE: ClientId = {user.oauth.clientId}, Authorization_code = {auth_code}")
             else:
                 r = r.json()
                 logging.warning(f"Auth Code PKCE: Endpoint did not redirect, got code {r['statusCode']}, message {r['message']}")
@@ -160,14 +166,14 @@ class OAuthUser(HttpUser):
             user: OAuthUser = self.user
             r = self.client.post(f"{user.token_host}/oauth2/token",
                                  data=user.oauth.token_request('authorization_code', pkce=True),
-                                 auth=(user.oauth.client.clientId, user.oauth.client.clientSecret),
+                                 auth=(user.oauth.clientId, user.oauth.clientSecret),
                                  verify=False,
                                  allow_redirects=False)
             if r.status_code == 200:
                 r = r.json()
                 access_token = r['access_token']
                 user.oauth.access_token = access_token
-                logging.info(f"Access Token Authorization Code Flow PKCE: ClientId = {user.oauth.client.clientId},"
+                logging.info(f"Access Token Authorization Code Flow PKCE: ClientId = {user.oauth.clientId},"
                              f"Access Token = {access_token}")
             else:
                 r = r.json()
