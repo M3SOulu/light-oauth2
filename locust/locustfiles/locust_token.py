@@ -34,6 +34,16 @@ class OAuthFlow:
         if method == 'S256':
             self.PKCE_code_challenge = urlsafe_b64encode(sha256(self.PKCE_code_verifier.encode('utf-8')).digest()).decode('utf-8').rstrip('=')
 
+    def reset_oauth(self) -> None:
+        self.authorization_code = None
+        self.access_token = None
+        self.refresh_token = None
+
+    def reset_pkce(self) -> None:
+        self.PKCE_code_verifier = None
+        self.PKCE_code_challenge = None
+        self.PKCE_code_challenge_method = None
+
     def code_request(self, pkce: bool = False) -> dict[str, str]:
         request = {"response_type": "code",
                    "client_id": self.client.clientId,
@@ -74,6 +84,9 @@ class OAuthUser(HttpUser):
     @task(1)
     class ClientCredentialsFlow(TaskSet):
 
+        def on_start(self):
+            self.user.oauth.reset_oauth()
+
         @tag('correct', '200')
         @task(1)
         def access_token_client_credentials_flow_200(self):
@@ -97,6 +110,9 @@ class OAuthUser(HttpUser):
     @tag('authorization_code', 'noPKCE')
     @task(1)
     class AuthorizationCodeFlow(SequentialTaskSet):
+
+        def on_start(self):
+            self.user.oauth.reset_oauth()
 
         @task(1)
         def access_code(self):
@@ -142,6 +158,7 @@ class OAuthUser(HttpUser):
 
         def on_start(self):
             self.user.oauth.make_pkce()
+            self.user.oauth.reset_oauth()
 
         @task(1)
         def access_code_pkce(self):
@@ -180,3 +197,6 @@ class OAuthUser(HttpUser):
                 logging.warning(f"Access Token Authorization Code Flow PKCE: Did not get code 200, code is {r['statusCode']}, "
                                 f"error code is {r['code']}")
             self.interrupt()
+
+        def on_stop(self):
+            self.user.oauth.reset_pkce()
