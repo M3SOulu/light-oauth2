@@ -150,10 +150,10 @@ class OAuthUser(HttpUser):
                 redirect_params = parse_qs(parsed_redirect.query)
                 auth_code = redirect_params.get('code')[0]
                 user.oauth.authorization_code = auth_code
-                logging.info(f"Auth Code: ClientId = {user.oauth.client.clientId}, Authorization_code = {auth_code}")
+                logging.info(f"Auth Code PKCE: ClientId = {user.oauth.client.clientId}, Authorization_code = {auth_code}")
             else:
                 r = r.json()
-                logging.warning(f"Auth Code: Endpoint did not redirect, got code {r['statusCode']}, message {r['message']}")
+                logging.warning(f"Auth Code PKCE: Endpoint did not redirect, got code {r['statusCode']}, message {r['message']}")
 
         @task(1)
         def access_token_authorization_code_flow_pkce(self):
@@ -167,10 +167,10 @@ class OAuthUser(HttpUser):
                 r = r.json()
                 access_token = r['access_token']
                 user.oauth.access_token = access_token
-                logging.info(f"Access Token Authorization Code Flow: ClientId = {user.client.clientId},"
+                logging.info(f"Access Token Authorization Code Flow PKCE: ClientId = {user.oauth.client.clientId},"
                              f"Access Token = {access_token}")
             else:
                 r = r.json()
-                logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, code is {r['statusCode']}, "
+                logging.warning(f"Access Token Authorization Code Flow PKCE: Did not get code 200, code is {r['statusCode']}, "
                                 f"error code is {r['code']}")
             self.interrupt()
