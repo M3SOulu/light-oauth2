@@ -154,7 +154,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
 - [ ] OAuth2 flows
   - [x] Client credentials flow
   - [x] Authorization code flow
-  - [ ] Authorization code flow PKCE
+  - [x] Authorization code flow PKCE
   - [ ] Resource owner password flow
   - [ ] Refresh token flow
 - [ ] Scope management
