@@ -235,6 +235,30 @@ class OAuthUser(HttpUser):
                         logging.warning(failstr)
                         r.failure(failstr)
                 self.interrupt()
+                
+
+            @tag('error', '400', 'illegal_grant_type')
+            @task(1)
+            def access_token_invalid_grant_type_400(self):
+                user: OAuthUser = self.user  
+                invalid_grant = user.oauth.token_request(grant_type='unsupported_grant')
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                              data=invalid_grant,
+                              auth=(user.oauth.clientId, user.oauth.clientSecret),
+                              verify=False,
+                              allow_redirects=False,
+                              catch_response=True) as r:
+                    if r.status_code == 400:
+                       r.success()
+                       error_response = r.json()
+                       logging.info(f"{get__name__()} Invalid grant type and response code 400 as expected: {error_response['error_description']}")
+                    else:
+                       failstr = (f"{get__name__()} - Expected 400 for invalid grant type, got {r.status_code}, "
+                       f"error {r.json().get('error_description', 'No error description')}")
+                       logging.warning(failstr)
+                       r.failure(failstr)
+                self.interrupt()
+
 
         def on_stop(self):
             self.user.oauth.reset_pkce()
