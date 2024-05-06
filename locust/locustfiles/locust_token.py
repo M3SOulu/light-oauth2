@@ -251,7 +251,7 @@ class OAuthUser(HttpUser):
                     if r.status_code == 400:
                        r.success()
                        error_response = r.json()
-                       logging.info(f"{get__name__()} Invalid grant type and response code 400 as expected: {error_response['error_description']}")
+                       logging.info(f"{get__name__()} Invalid grant type and response code 400 as expected: {error_response}")
                     else:
                        failstr = (f"{get__name__()} - Expected 400 for invalid grant type, got {r.status_code}, "
                        f"error {r.json().get('error_description', 'No error description')}")
