@@ -305,5 +305,29 @@ class OAuthUser(HttpUser):
                        r.failure(failstr)
                 self.interrupt()
                 
+            @tag('error', '401', 'client_secret_wrong')
+            @task(1)
+            def access_token_client_secret_wrong(self):
+                user: OAuthUser = self.user
+                invalid_client_secret = "invalid_client_secret"
+                client_id = user.oauth.clientId
+                credentials = base64.b64encode(f"{client_id}:{invalid_client_secret}".encode()).decode('utf-8')
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                              data=user.oauth.token_request('authorization_code'),
+                              auth={"Authorization": credentials},
+                              verify=False,
+                              allow_redirects=False,
+                              catch_response=True) as r:
+                    if r.status_code == 401:
+                       r.success()
+                       error_response = r.json()
+                       logging.info(f"{get__name__()} - Client secret is wrong with response code 401 as expected: {error_response['message']}")
+                    else:
+                       failstr = (f"{get__name__()} - Expected 401 for client secret wrong, got  {r.status_code}, "
+                       f"error {r.json().get('message', 'No error description')}")
+                       logging.warning(failstr)
+                       r.failure(failstr)
+                self.interrupt()
+                
         def on_stop(self):
             self.user.oauth.reset_pkce()
