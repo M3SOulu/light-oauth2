@@ -290,28 +290,28 @@ class ClientRegistration(HttpUser):
 
     @task(1)
     class DeleteClient(TaskSet):
-        # @task(1)
-        # @tag('correct', 'delete', '200', 'delete_client_200')
-        # def delete_client_200(self):
-        #     try:
-        #         c = CLIENTS.pop()
-        #     except KeyError:
-        #         self.interrupt()
-        #     with self.client.delete(f"/oauth2/client/{c.clientId}",
-        #                             verify=False,
-        #                             allow_redirects=False,
-        #                             catch_response=True) as r:
-        #         if r.status_code == 200:
-        #             logging.info(f"{get__name__()} - Deleted client: {c!r}")
-        #             r.success()
-        #         else:
-        #             CLIENTS.add(c)
-        #             failure_str = (f'{get__name__()} - Client deletion did not return code 200, code {r.status_code}, '
-        #                            f'error {r.json()}')
-        #             logging.warning(failure_str)
-        #             r.failure(failure_str)
-        #     del c
-        #     self.interrupt()
+        @task(1)
+        @tag('correct', 'delete', '200', 'delete_client_200')
+        def delete_client_200(self):
+            try:
+                c = CLIENTS.pop()
+            except KeyError:
+                self.interrupt()
+            with self.client.delete(f"/oauth2/client/{c.clientId}",
+                                    verify=False,
+                                    allow_redirects=False,
+                                    catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"{get__name__()} - Deleted client: {c!r}")
+                    r.success()
+                else:
+                    CLIENTS.add(c)
+                    failure_str = (f'{get__name__()} - Client deletion did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            del c
+            self.interrupt()
 
         @task(1)
         @tag('error', 'delete', '404', 'delete_client_404_no_client')
