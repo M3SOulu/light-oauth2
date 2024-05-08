@@ -3,6 +3,7 @@ from .mylogging import get__name__
 from locust import HttpUser, task, SequentialTaskSet, TaskSet, tag
 
 import logging
+import base64
 from urllib.parse import urlparse, parse_qs
 from hashlib import sha256
 from base64 import urlsafe_b64encode
@@ -280,5 +281,29 @@ class OAuthUser(HttpUser):
                        r.failure(failstr)
                 self.interrupt()
 
+            @tag('error', '404', 'client_id_not_found')
+            @task(1)
+            def access_token_client_id_not_found_404(self):
+                user: OAuthUser = self.user
+                invalid_client_id = "invalid_client_id"
+                client_secret = user.oauth.clientSecret
+                credentials = base64.b64encode(f"{invalid_client_id}:{client_secret}".encode()).decode('utf-8')
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                              data=user.oauth.token_request('authorization_code'),
+                              auth={"Authorization": credentials},
+                              verify=False,
+                              allow_redirects=False,
+                              catch_response=True) as r:
+                    if r.status_code == 404:
+                       r.success()
+                       error_response = r.json()
+                       logging.info(f"{get__name__()} - Client ID not found with response code 404 as expected: {error_response['message']}")
+                    else:
+                       failstr = (f"{get__name__()} - Expected 404 for client ID not found, got  {r.status_code}, "
+                       f"error {r.json().get('message', 'No error description')}")
+                       logging.warning(failstr)
+                       r.failure(failstr)
+                self.interrupt()
+                
         def on_stop(self):
             self.user.oauth.reset_pkce()
