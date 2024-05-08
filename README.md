@@ -119,7 +119,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 200 *correct, token issued*
     - [ ] 400 *unable to parse `x-www-form-urlencoded` form'
     - [x] 400 *illegal value for grant type*
-    - [ ] 400 *authorization header missing*
+    - [x] 400 *authorization header missing*
     - [ ] 404 *`clientId` not found*
     - [ ] 401 *wrong `client_secret`*
     - [ ] 401 *authorization form cannot be decoded*
