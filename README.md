@@ -118,7 +118,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
   - [ ] `oauth2/token@post` *exchange authorization code for access token*
     - [x] 200 *correct, token issued*
     - [ ] 400 *unable to parse `x-www-form-urlencoded` form'
-    - [ ] 400 *illegal value for grant type*
+    - [x] 400 *illegal value for grant type*
     - [ ] 400 *authorization header missing*
     - [ ] 404 *`clientId` not found*
     - [ ] 401 *wrong `client_secret`*
