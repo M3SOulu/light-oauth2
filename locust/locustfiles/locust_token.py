@@ -341,7 +341,7 @@ class OAuthUser(HttpUser):
                     if r.status_code == 401:
                        r.success()
                        error_response = r.json()
-                       logging.info(f"{get__name__()} - Could not decode client credentials 401 as expected: {error_response['message']}")
+                       logging.info(f"{get__name__()} - Could not decode auth form 401 as expected: {error_response['message']}")
                     else:
                        failstr = (f"{get__name__()} - Expected 401, got  {r.status_code}, "
                        f"error {r.json().get('message', 'No error description')}")
