@@ -242,7 +242,7 @@ class OAuthUser(HttpUser):
             @task(1)
             def access_token_invalid_grant_type_400(self):
                 user: OAuthUser = self.user  
-                invalid_grant = user.oauth.token_request(grant_type='unsupported_grant')
+                invalid_grant = user.oauth.token_request(grant_type='unsupported_grant', pkce=True)
                 with self.client.post(f"{user.token_host}/oauth2/token",
                               data=invalid_grant,
                               auth=(user.oauth.clientId, user.oauth.clientSecret),
@@ -265,7 +265,7 @@ class OAuthUser(HttpUser):
             def access_token_missing_authorization_header_400(self):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                          data=user.oauth.token_request(grant_type='authorization_code'),
+                          data=user.oauth.token_request(grant_type='authorization_code', pkce=True),
                           #Removed the basic auth to simulate missing Authorization header
                           verify=False,
                           allow_redirects=False,
@@ -289,7 +289,7 @@ class OAuthUser(HttpUser):
                 client_secret = user.oauth.clientSecret
                 credentials = base64.b64encode(f"{invalid_client_id}:{client_secret}".encode()).decode('utf-8')
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code'),
+                              data=user.oauth.token_request('authorization_code', pkce=True),
                               auth={"Authorization": credentials},
                               verify=False,
                               allow_redirects=False,
@@ -313,7 +313,7 @@ class OAuthUser(HttpUser):
                 client_id = user.oauth.clientId
                 credentials = base64.b64encode(f"{client_id}:{invalid_client_secret}".encode()).decode('utf-8')
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code'),
+                              data=user.oauth.token_request('authorization_code', pkce=True),
                               auth={"Authorization": credentials},
                               verify=False,
                               allow_redirects=False,
@@ -328,6 +328,6 @@ class OAuthUser(HttpUser):
                        logging.warning(failstr)
                        r.failure(failstr)
                 self.interrupt()
-                
+                 
         def on_stop(self):
             self.user.oauth.reset_pkce()
