@@ -242,9 +242,8 @@ class OAuthUser(HttpUser):
             @task(1)
             def access_token_invalid_grant_type_400(self):
                 user: OAuthUser = self.user  
-                invalid_grant = user.oauth.token_request(grant_type='unsupported_grant', pkce=True)
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=invalid_grant,
+                              data=user.oauth.token_request(grant_type='unsupported_grant', pkce=True),
                               auth=(user.oauth.clientId, user.oauth.clientSecret),
                               verify=False,
                               allow_redirects=False,
@@ -328,6 +327,26 @@ class OAuthUser(HttpUser):
                        logging.warning(failstr)
                        r.failure(failstr)
                 self.interrupt()
-                 
+
+            @tag('error', '401', 'access_token_authorization_code_flow_pkce_401')
+            @task
+            def access_token_authorization_code_flow_pkce_401(self):
+                user: OAuthUser = self.user
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                              data=user.oauth.token_request('authorization_code', pkce=True),
+                              auth=("incorrect_client_id", "incorrect_client_secret"),
+                              verify=False,
+                              allow_redirects=False,
+                              catch_response=True) as r:
+                    if r.status_code == 401:
+                       r.success()
+                       error_response = r.json()
+                       logging.info(f"{get__name__()} - Could not decode client credentials 401 as expected: {error_response['message']}")
+                    else:
+                       failstr = (f"{get__name__()} - Expected 401, got  {r.status_code}, "
+                       f"error {r.json().get('message', 'No error description')}")
+                       logging.warning(failstr)
+                       r.failure(failstr)
+                self.interrupt()
         def on_stop(self):
             self.user.oauth.reset_pkce()
