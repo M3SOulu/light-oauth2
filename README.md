@@ -123,7 +123,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 404 *`clientId` not found*
     - [x] 401 *wrong `client_secret`*
     - [x] 401 *authorization form cannot be decoded*
-    - [ ] 401 *basic authorization header missing (bearer token is passed)* 
+    - [x] 401 *basic authorization header missing (bearer token is passed)* 
     - [ ] 400 *`PKCE`: code verifier too short*
     - [ ] 400 *`PKCE`: code verifier too long*
     - [ ] 400 *`PKCE`: code verifier invalid format*

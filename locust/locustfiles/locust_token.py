@@ -328,9 +328,9 @@ class OAuthUser(HttpUser):
                        r.failure(failstr)
                 self.interrupt()
 
-            @tag('error', '401', 'access_token_authorization_code_flow_pkce_401')
-            @task
-            def access_token_authorization_code_flow_pkce_401(self):
+            @tag('error', '401', 'access_token_authorization_form')
+            @task(1)
+            def access_token_authorization_form_401(self):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
                               data=user.oauth.token_request('authorization_code', pkce=True),
@@ -348,5 +348,26 @@ class OAuthUser(HttpUser):
                        logging.warning(failstr)
                        r.failure(failstr)
                 self.interrupt()
+
+            @tag('401_error', 'authorization_header_error')
+            @task(1)
+            def access_token_with_incorrect_auth_header(self):
+                user: OAuthUser = self.user
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                                  data=user.oauth.token_request('client_credentials'),
+                                  headers={"Authorization": "Bearer incorrect_token"},
+                                  verify=False,
+                                  allow_redirects=False,
+                                  catch_response=True) as response:
+                    if response.status_code == 401:
+                        response.success()
+                        error_response = response.json()
+                        logging.info(f"{get__name__()} - Unauthorized head 401 as expected:{error_response['message']}")
+                    else:
+                        failstr = f"{get__name__()} - Expected 401 but got {response.status_code}."
+                        logging.error(failstr)
+                        response.failure(failstr)
+                self.interrupt()
+
         def on_stop(self):
             self.user.oauth.reset_pkce()
