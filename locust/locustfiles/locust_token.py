@@ -349,12 +349,12 @@ class OAuthUser(HttpUser):
                        r.failure(failstr)
                 self.interrupt()
 
-            @tag('401_error', 'authorization_header_error')
+            @tag('error', '401' , 'authorization_header_error')
             @task(1)
             def access_token_with_incorrect_auth_header(self):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                                  data=user.oauth.token_request('client_credentials'),
+                                  data=user.oauth.token_request('authorization_code', pkce=True),
                                   headers={"Authorization": "Bearer incorrect_token"},
                                   verify=False,
                                   allow_redirects=False,
