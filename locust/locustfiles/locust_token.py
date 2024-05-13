@@ -383,7 +383,7 @@ class OAuthUser(HttpUser):
                     if response.status_code == 400:
                         response.success()
                         error_response = response.json()
-                        logging.info(f"{get__name__()} -  - Unable to parse x-www-form-urlencoded status 400 as expected:{error_response['message']}")
+                        logging.info(f"{get__name__()} - Unable to parse x-www-form-urlencoded status 400 as expected:{error_response['message']}")
                     else:
                         failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
                         logging.error(failstr)
