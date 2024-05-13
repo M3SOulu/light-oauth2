@@ -104,7 +104,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
 - [ ] `oauth2-code` *authorization code flow*
   - [ ] `oauth2/code@get` *get authorization code*
     - [x] 302 *redirect with authorization code*
-    - [ ] 401 *incorrect password*
+    - [x] 401 *incorrect password*
     - [ ] 400 *`response_type` missing*
     - [ ] 400 *`client_id` missing*
     - [ ] 400 *`response_type` does not equal `code`*

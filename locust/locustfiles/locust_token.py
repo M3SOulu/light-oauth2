@@ -210,6 +210,29 @@ class OAuthUser(HttpUser):
                         # TODO reschedule to appropriate task
                 self.interrupt()
 
+            @tag('error', '401', 'authorization_code_pkce_invalid_password_401')
+            @task(1)
+            def authorization_code_pkce_invalid_password_401(self):
+                user: OAuthUser = self.user
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=user.oauth.code_request(pkce=True),
+                             auth=('admin', 'wrongpassword'),
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 401:
+                        r.success()
+                        failstr = (f"{get__name__()} - Invalid password and response code 401 as expected: "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Expected 401 for invalid password, got {r.status_code}, "
+                        f"error {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+
         @tag('access_token')
         @task(1)
         class AccessTokenPKCE(TaskSet):
@@ -284,7 +307,7 @@ class OAuthUser(HttpUser):
             @task(1)
             def access_token_client_id_not_found_404(self):
                 user: OAuthUser = self.user
-                invalid_client_id = "invalid_client_id"
+                invalid_client_id = "wrong_client_id"
                 client_secret = user.oauth.clientSecret
                 credentials = base64.b64encode(f"{invalid_client_id}:{client_secret}".encode()).decode('utf-8')
                 with self.client.post(f"{user.token_host}/oauth2/token",
@@ -308,7 +331,7 @@ class OAuthUser(HttpUser):
             @task(1)
             def access_token_client_secret_wrong(self):
                 user: OAuthUser = self.user
-                invalid_client_secret = "invalid_client_secret"
+                invalid_client_secret = "wrong_client_secret"
                 client_id = user.oauth.clientId
                 credentials = base64.b64encode(f"{client_id}:{invalid_client_secret}".encode()).decode('utf-8')
                 with self.client.post(f"{user.token_host}/oauth2/token",
@@ -376,7 +399,7 @@ class OAuthUser(HttpUser):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
                                   headers={"Content-Type": "text/plain"},
-                                  data="invalid_data_structure",
+                                  data=user.oauth.token_request("invalid_data_structure", pkce=True),
                                   verify=False,
                                   allow_redirects=False,
                                   catch_response=True) as response:
