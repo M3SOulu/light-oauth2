@@ -106,7 +106,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 302 *redirect with authorization code*
     - [x] 401 *incorrect password*
     - [x] 400 *`response_type` missing*
-    - [ ] 400 *`client_id` missing*
+    - [x] 400 *`client_id` missing*
     - [ ] 400 *`response_type` does not equal `code`*
     - [ ] 404 *`clientId` not found*
     - [ ] 400 *`PKCE`: invalid code challenge method*

@@ -237,7 +237,7 @@ class OAuthUser(HttpUser):
             @task(1)
             def authorization_code_pkce_invalid_response_type_400(self):
                 user: OAuthUser = self.user
-                incorrect_params = {"response_type": "", "client_id": ""} 
+                incorrect_params = {"response_type": "", "client_id": "", "redirect_uri": "http://localhost:8080/authorization"} 
                 with self.client.get(f"{user.code_host}/oauth2/code",
                              params=incorrect_params,
                              auth=('admin', '123456'),
@@ -252,6 +252,32 @@ class OAuthUser(HttpUser):
                     else:
                         failstr = (f"{get__name__()} - Expected 400 for invalid response type, got {r.status_code}, "
                         f"error {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+    
+            @tag('error', '400', 'authorization_code_pkce_client_id_missing_400')
+            @task(1)
+            def authorization_code_pkce_client_id_missing_400(self):
+                user: OAuthUser = self.user
+                params_without_client_id = {
+                  "response_type": "code",  
+                   "redirect_uri": "http://localhost:8080/authorization" } # removed client id from here
+                
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_without_client_id,
+                             auth=('admin', '123456'),  
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 400:
+                        failstr = (f"{get__name__()} - Client ID is missing and response code 400 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Client ID Missing: Unexpected status code {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
                         logging.warning(failstr)
                         r.failure(failstr)
                 self.interrupt()
@@ -284,7 +310,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
                 
 
-            @tag('error', '400', 'illegal_grant_type')
+            @tag('error', '400', 'access_token_illegal_grant_type_400')
             @task(1)
             def access_token_invalid_grant_type_400(self):
                 user: OAuthUser = self.user  
