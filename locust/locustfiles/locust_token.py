@@ -245,6 +245,7 @@ class OAuthUser(HttpUser):
                              allow_redirects=False,
                              catch_response=True) as r:
                     if r.status_code == 400:
+                        r.success()
                         failstr = (f"{get__name__()} - missing response type and response code 400 as expected:, "
                            f"error {r.json()}")
                         logging.error(failstr)
@@ -271,6 +272,7 @@ class OAuthUser(HttpUser):
                              allow_redirects=False,
                              catch_response=True) as r:
                     if r.status_code == 400:
+                        r.success()
                         failstr = (f"{get__name__()} - Client ID is missing and response code 400 as expected:, "
                            f"error {r.json()}")
                         logging.error(failstr)
@@ -282,6 +284,32 @@ class OAuthUser(HttpUser):
                         r.failure(failstr)
                 self.interrupt()
 
+            @tag('error', '400', 'authorization_code_pkce_response_not_code_400')
+            @task(1)
+            def authorization_code_pkce_response_not_code_400(self):
+                user: OAuthUser = self.user
+                params_auth = { 
+                  "client_id": user.oauth.clientId,
+                  "response_type": "token",  #not code
+                   "redirect_uri": "http://localhost:8080/authorization" } 
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_auth,
+                             auth=('admin', '123456'),  
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 400:
+                        r.success()
+                        failstr = (f"{get__name__()} - Response type is not code and response code 400 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Response type noe code : Unexpected status code {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
         @tag('access_token')
         @task(1)
         class AccessTokenPKCE(TaskSet):
