@@ -233,11 +233,11 @@ class OAuthUser(HttpUser):
                         r.failure(failstr)
                 self.interrupt()
 
-            @tag('error', '400', 'authorization_code_pkce_invalid_response_type_400')
+            @tag('error', '400', 'authorization_code_pkce_missing_response_type_400')
             @task(1)
-            def authorization_code_pkce_invalid_response_type_400(self):
+            def authorization_code_pkce_missing_response_type_400(self):
                 user: OAuthUser = self.user
-                incorrect_params = {"response_type": "", "client_id": "", "redirect_uri": "http://localhost:8080/authorization"} 
+                incorrect_params = {"client_id": "1234", "redirect_uri": "http://localhost:8080/authorization"} 
                 with self.client.get(f"{user.code_host}/oauth2/code",
                              params=incorrect_params,
                              auth=('admin', '123456'),
@@ -245,7 +245,7 @@ class OAuthUser(HttpUser):
                              allow_redirects=False,
                              catch_response=True) as r:
                     if r.status_code == 400:
-                        failstr = (f"{get__name__()} - Invalid response type and response code 400 as expected:, "
+                        failstr = (f"{get__name__()} - missing response type and response code 400 as expected:, "
                            f"error {r.json()}")
                         logging.error(failstr)
                         r.failure(failstr)
