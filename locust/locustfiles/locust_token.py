@@ -288,12 +288,10 @@ class OAuthUser(HttpUser):
             @task(1)
             def authorization_code_pkce_response_not_code_400(self):
                 user: OAuthUser = self.user
-                params_auth = { 
-                  "client_id": user.oauth.clientId,
-                  "response_type": "token",  #not code
-                   "redirect_uri": "http://localhost:8080/authorization" } 
+                params_with_invalid_response= user.oauth.code_request(pkce=True)
+                params_with_invalid_response['response_type'] = 'token' #not code
                 with self.client.get(f"{user.code_host}/oauth2/code",
-                             params=params_auth,
+                             params=params_with_invalid_response,
                              auth=('admin', '123456'),  
                              verify=False,
                              allow_redirects=False,
@@ -310,6 +308,34 @@ class OAuthUser(HttpUser):
                         logging.warning(failstr)
                         r.failure(failstr)
                 self.interrupt()
+
+            @tag('error', '404', 'invalid_client_id_with_pkce')
+            @task(1)
+            def authorization_code_invalid_client_id_pkce_404(self):
+                user: OAuthUser = self.user
+                params_with_invalid_client= user.oauth.code_request(pkce=True)  
+                params_with_invalid_client['client_id'] = 'invalid_client_id' 
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_with_invalid_client,
+                             auth=('admin', '123456'),
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 404:
+                        r.success()
+                        failstr = (f"{get__name__()} - ClientId is not valid and response code 404 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Client Id not valid : Unexpected status code {r.status_code}, "
+                           f"expected 404, received details: {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+
+
+
         @tag('access_token')
         @task(1)
         class AccessTokenPKCE(TaskSet):
