@@ -150,6 +150,131 @@ class OAuthUser(HttpUser):
                         # TODO reschedule to approriate task
                 self.interrupt()
 
+            @tag('error', '401', 'authorization_code_invalid_password_401')
+            @task(1)
+            def authorization_code_invalid_password_401(self):
+                user: OAuthUser = self.user
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=user.oauth.code_request(),
+                             auth=('admin', 'wrongpassword'),
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 401:
+                        r.success()
+                        failstr = (f"{get__name__()} - Invalid password and response code 401 as expected: "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Expected 401 for invalid password, got {r.status_code}, "
+                        f"error {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+
+            @tag('error', '400', 'authorization_code_missing_response_type_400')
+            @task(1)
+            def authorization_code_missing_response_type_400(self):
+                user: OAuthUser = self.user
+                incorrect_params = {"client_id": "1234", "redirect_uri": "http://localhost:8080/authorization"} 
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=incorrect_params,
+                             auth=('admin', '123456'),
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 400:
+                        r.success()
+                        failstr = (f"{get__name__()} - missing response type and response code 400 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Expected 400 for invalid response type, got {r.status_code}, "
+                        f"error {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+    
+            @tag('error', '400', 'authorization_code_client_id_missing_400')
+            @task(1)
+            def authorization_code_client_id_missing_400(self):
+                user: OAuthUser = self.user
+                params_without_client_id = {
+                  "response_type": "code",  
+                   "redirect_uri": "http://localhost:8080/authorization" } # removed client id from here
+                
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_without_client_id,
+                             auth=('admin', '123456'),  
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 400:
+                        r.success()
+                        failstr = (f"{get__name__()} - Client ID is missing and response code 400 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Client ID Missing: Unexpected status code {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+
+            @tag('error', '400', 'authorization_code_response_not_code_400')
+            @task(1)
+            def authorization_code_response_not_code_400(self):
+                user: OAuthUser = self.user
+                params_with_invalid_response= user.oauth.code_request()
+                params_with_invalid_response['response_type'] = 'token' #not code
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_with_invalid_response,
+                             auth=('admin', '123456'),  
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 400:
+                        r.success()
+                        failstr = (f"{get__name__()} - Response type is not code and response code 400 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Response type noe code : Unexpected status code {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+
+            @tag('error', '404', 'invalid_client_id_404')
+            @task(1)
+            def authorization_code_invalid_client_id_404(self):
+                user: OAuthUser = self.user
+                params_with_invalid_client= user.oauth.code_request()  
+                params_with_invalid_client['client_id'] = 'invalid_client_id' 
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_with_invalid_client,
+                             auth=('admin', '123456'),
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 404:
+                        r.success()
+                        failstr = (f"{get__name__()} - ClientId is not valid and response code 404 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Client Id not valid : Unexpected status code {r.status_code}, "
+                           f"expected 404, received details: {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
+
+
         @task(1)
         @tag('access_token')
         class AccessToken(TaskSet):
