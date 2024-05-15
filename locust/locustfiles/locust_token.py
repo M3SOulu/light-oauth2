@@ -654,10 +654,42 @@ class OAuthUser(HttpUser):
                         logging.error(failstr)
                         r.failure(failstr)
                     else:
-                        failstr = (f"{get__name__()} - Invalid Code Challenge Method: Incorrect handling, expected 400 but got {r.status_code}, "
+                        failstr = (f"{get__name__()} - Invalid Code Challenge Method expected 400 but got {r.status_code}, "
                            f"expected 400, received details: {r.json()}")
                         logging.warning(failstr)
                         r.failure(failstr)
+                self.interrupt()
+
+            @tag('error', '400', 'code_challenge_too_short')
+            @task(1)
+            def code_challenge_too_short(self):
+                user: OAuthUser = self.user
+                short_code_challenge = "tooShort"  # Intentionally too short
+
+                params_with_too_short_challenge = {
+            "response_type": "code",
+            "client_id": user.oauth.clientId,
+            "redirect_uri": "http://localhost:8080/authorization",
+            "code_challenge": short_code_challenge,
+            "code_challenge_method": user.oauth.PKCE_code_challenge_method
+              }
+
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_with_too_short_challenge,
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                        if r.status_code == 400:
+                            r.success()
+                            failstr = (f"{get__name__()} - Code Challenge Too Short and response code 400 as expected:, "
+                                       f"error {r.json()}")
+                            logging.error(failstr)
+                            r.failure(failstr)
+                        else:
+                           failstr = (f"{get__name__()} - Code challenge too short expected 400 but got {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
+                           logging.warning(failstr)
+                           r.failure(failstr)
                 self.interrupt()
 
 
