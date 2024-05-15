@@ -109,7 +109,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 400 *`client_id` missing*
     - [x] 400 *`response_type` does not equal `code`*
     - [x] 404 *`clientId` not found*
-    - [ ] 400 *`PKCE`: invalid code challenge method*
+    - [x] 400 *`PKCE`: invalid code challenge method*
     - [ ] 400 *`PKCE`: code challenge too short*
     - [ ] 400 *`PKCE`: code challenge too long*
     - [ ] 400 *`PKCE`: code challenge invalid format*

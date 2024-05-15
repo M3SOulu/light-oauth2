@@ -177,7 +177,7 @@ class OAuthUser(HttpUser):
             @task(1)
             def authorization_code_missing_response_type_400(self):
                 user: OAuthUser = self.user
-                incorrect_params = {"client_id": "1234", "redirect_uri": "http://localhost:8080/authorization"} 
+                incorrect_params = {"client_id": "1234", "redirect_uri": "http://localhost:8080/authorization"} #response type missing
                 with self.client.get(f"{user.code_host}/oauth2/code",
                              params=incorrect_params,
                              auth=('admin', '123456'),
@@ -532,7 +532,7 @@ class OAuthUser(HttpUser):
 
             @tag('error', '400', 'authorization_code_pkce_missing_response_type_400')
             @task(1)
-            def authorization_code_pkce_missing_response_type_400(self):
+            def authorization_code_pkce_missing_response_type_400(self): #need to add Pkce in this one
                 user: OAuthUser = self.user
                 incorrect_params = {"client_id": "1234", "redirect_uri": "http://localhost:8080/authorization"} 
                 with self.client.get(f"{user.code_host}/oauth2/code",
@@ -556,7 +556,7 @@ class OAuthUser(HttpUser):
     
             @tag('error', '400', 'authorization_code_pkce_client_id_missing_400')
             @task(1)
-            def authorization_code_pkce_client_id_missing_400(self):
+            def authorization_code_pkce_client_id_missing_400(self): #need to add Pkce in this one
                 user: OAuthUser = self.user
                 params_without_client_id = {
                   "response_type": "code",  
@@ -631,6 +631,34 @@ class OAuthUser(HttpUser):
                         r.failure(failstr)
                 self.interrupt()
 
+            @tag('error', '400', 'invalid_code_challenge_method_Pkce_400')
+            @task(1)
+            def invalid_code_challenge_method_pkce_400(self):
+                user: OAuthUser = self.user
+                invalid_pkce = {
+            "response_type": "code",
+            "client_id": user.oauth.clientId,
+            "redirect_uri": "http://localhost:8080/authorization",
+            "code_challenge": user.oauth.PKCE_code_challenge,
+            "code_challenge_method": "invalid_method"  # Intentionally added invalid method
+            }
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=invalid_pkce,
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                    if r.status_code == 400:
+                        r.success()
+                        failstr = (f"{get__name__()} - Invalid Code Challenge Method and response code 400 as expected:, "
+                           f"error {r.json()}")
+                        logging.error(failstr)
+                        r.failure(failstr)
+                    else:
+                        failstr = (f"{get__name__()} - Invalid Code Challenge Method: Incorrect handling, expected 400 but got {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
+                        logging.warning(failstr)
+                        r.failure(failstr)
+                self.interrupt()
 
 
         @tag('access_token')
@@ -793,7 +821,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
 
-            @tag('error', '400' , 'Unable_to_parse_form_urlencoded_pkce_400')
+            @tag('error', '400' , 'Unable_to_parse_form_urlencoded_pkce_400') 
             @task(1)
             def access_token_form_urlencoded_pkce_400(self):
                 user: OAuthUser = self.user
