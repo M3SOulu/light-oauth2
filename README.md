@@ -110,9 +110,9 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 400 *`response_type` does not equal `code`*
     - [x] 404 *`clientId` not found*
     - [x] 400 *`PKCE`: invalid code challenge method*
-    - [ ] 400 *`PKCE`: code challenge too short*
-    - [ ] 400 *`PKCE`: code challenge too long*
-    - [ ] 400 *`PKCE`: code challenge invalid format*
+    - [x] 400 *`PKCE`: code challenge too short*
+    - [x] 400 *`PKCE`: code challenge too long*
+    - [x] 400 *`PKCE`: code challenge invalid format*
   - [ ] `oauth2/code@post` ?? *same as `get` but credentials are posted?*
 - [ ] `oauth2-token` *access token*
   - [ ] `oauth2/token@post` *exchange authorization code for access token*

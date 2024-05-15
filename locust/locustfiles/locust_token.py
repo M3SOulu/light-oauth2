@@ -660,9 +660,9 @@ class OAuthUser(HttpUser):
                         r.failure(failstr)
                 self.interrupt()
 
-            @tag('error', '400', 'code_challenge_too_short')
+            @tag('error', '400', 'code_challenge_too_short_pkce_400')
             @task(1)
-            def code_challenge_too_short(self):
+            def code_challenge_too_short_pkce_400(self):
                 user: OAuthUser = self.user
                 short_code_challenge = "tooShort"  # Intentionally too short
 
@@ -692,6 +692,68 @@ class OAuthUser(HttpUser):
                            r.failure(failstr)
                 self.interrupt()
 
+            @tag('error', '400', 'code_challenge_too_long_pkce_400')
+            @task(1)
+            def code_challenge_too_long_pkce_400(self):
+                user: OAuthUser = self.user
+                long_code_challenge = "B" * 150        #intentionally too long because max size is 128 characters
+                params_with_too_long_challenge = {
+            "response_type": "code",
+            "client_id": user.oauth.clientId,
+            "redirect_uri": "http://localhost:8080/authorization",
+            "code_challenge": long_code_challenge,
+            "code_challenge_method": user.oauth.PKCE_code_challenge_method
+              }
+
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_with_too_long_challenge,
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                        if r.status_code == 400:
+                            r.success()
+                            failstr = (f"{get__name__()} - Code Challenge Too long and response code 400 as expected:, "
+                                       f"error {r.json()}")
+                            logging.error(failstr)
+                            r.failure(failstr)
+                        else:
+                           failstr = (f"{get__name__()} - Code challenge too long expected 400 but got {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
+                           logging.warning(failstr)
+                           r.failure(failstr)
+                self.interrupt()
+
+            @tag('error', '400', 'code_challenge_invalid_format_pkce_400')
+            @task(1)
+            def code_challenge_invalid_format_pkce_400(self):
+                user: OAuthUser = self.user
+                wrong_format_code_challenge = "invalid@@@###$$$"      #intentionally too long because max size is 128 characters
+                params_with_invalid_format_challenge = {
+            "response_type": "code",
+            "client_id": user.oauth.clientId,
+            "redirect_uri": "http://localhost:8080/authorization",
+            "code_challenge": wrong_format_code_challenge,
+            "code_challenge_method": user.oauth.PKCE_code_challenge_method
+              }
+
+                with self.client.get(f"{user.code_host}/oauth2/code",
+                             params=params_with_invalid_format_challenge,
+                             verify=False,
+                             allow_redirects=False,
+                             catch_response=True) as r:
+                        if r.status_code == 400:
+                            r.success()
+                            failstr = (f"{get__name__()} - Invalid format challenge and response code 400 as expected:, "
+                                       f"error {r.json()}")
+                            logging.error(failstr)
+                            r.failure(failstr)
+                        else:
+                           failstr = (f"{get__name__()} - Invalid format and expected 400 but got {r.status_code}, "
+                           f"expected 400, received details: {r.json()}")
+                           logging.warning(failstr)
+                           r.failure(failstr)
+                self.interrupt()
+            
 
         @tag('access_token')
         @task(1)
