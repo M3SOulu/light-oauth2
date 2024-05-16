@@ -986,5 +986,31 @@ class OAuthUser(HttpUser):
                         logging.error(failstr)
                         response.failure(failstr)
                 self.interrupt()
+
+            @tag('error', '400', 'code_verifier_too_long_pkce_400')
+            @task(1)
+            def code_verifier_too_long_pkce_400(self):
+                user: OAuthUser = self.user  
+                long_code_verifier = "A" * 150
+                token_request_params = {
+            "grant_type": "authorization_code",
+            "code": user.oauth.authorization_code,
+            "redirect_uri": "http://localhost:8080/authorization",
+            "client_id": user.oauth.clientId,
+            "code_verifier": long_code_verifier 
+        }
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                              data=token_request_params,
+                              verify=False,
+                              catch_response=True) as response:
+                    if response.status_code == 400:
+                            response.success()
+                            error_response = response.json()
+                            logging.info(f"{get__name__()} - code verifier too long and status 400 as expected:{error_response['message']}")
+                    else:
+                        failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
+                        logging.error(failstr)
+                        response.failure(failstr)
+                self.interrupt()
         def on_stop(self):
             self.user.oauth.reset_pkce()
