@@ -126,7 +126,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 401 *basic authorization header missing (bearer token is passed)* 
     - [ ] 400 *`PKCE`: code verifier too short*
     - [ ] 400 *`PKCE`: code verifier too long*
-    - [ ] 400 *`PKCE`: code verifier invalid format*
+    - [x] 400 *`PKCE`: code verifier invalid format*
     - [ ] 400 *`PKCE`: code verifier missing*
     - [ ] 400 *`PKCE`: verification failed*
 - [ ] `oauth2-refresh-token` *manage refresh tokens*

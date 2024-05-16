@@ -935,5 +935,31 @@ class OAuthUser(HttpUser):
                         response.failure(failstr)
                 self.interrupt()
 
+            @tag('error', '400', 'invalid_code_verifier_format_PKCE_400')
+            @task(1)
+            def invalid_code_verifier_format_pkce_400(self):
+                user: OAuthUser = self.user
+                wrong_code_verifier = "invalid@@@###$$$"
+                token_request_params = {
+            "grant_type": "authorization_code",
+            "code": user.oauth.authorization_code,
+            "redirect_uri": "http://localhost:8080/authorization",
+            "client_id": user.oauth.clientId,
+            "code_verifier": wrong_code_verifier  # Invalid format
+        }
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                              data=token_request_params,
+                              verify=False,
+                              catch_response=True) as response:
+                    if response.status_code == 400:
+                            response.success()
+                            error_response = response.json()
+                            logging.info(f"{get__name__()} - Invalid code verifier and status 400 as expected:{error_response['message']}")
+                    else:
+                        failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
+                        logging.error(failstr)
+                        response.failure(failstr)
+                self.interrupt()
+
         def on_stop(self):
             self.user.oauth.reset_pkce()
