@@ -140,6 +140,163 @@ def authorization_code_invalid_client_id_404(self):
     self.interrupt()
 
 
+@tag('error', '400', 'access_token_illegal_grant_type_400')
+@task(0)
+def access_token_invalid_grant_type_400(self):
+    user: OAuthUser = self.user
+    with self.client.post(f"{user.token_host}/oauth2/token",
+                          data=user.oauth.token_request(grant_type='unsupported_grant', pkce=True),
+                          auth=(user.oauth.clientId, user.oauth.clientSecret),
+                          verify=False,
+                          allow_redirects=False,
+                          catch_response=True) as r:
+        if r.status_code == 400:
+            r.success()
+            error_response = r.json()
+            logging.info(f"{get__name__()} Invalid grant type and response code 400 as expected: {error_response}")
+        else:
+            failstr = (f"{get__name__()} - Expected 400 for invalid grant type, got {r.status_code}, "
+                       f"error {r.json().get('error_description', 'No error description')}")
+            logging.warning(failstr)
+            r.failure(failstr)
+    self.interrupt()
+
+
+@tag('error', '404', 'access_token_client_id_not_found_404')
+@task(0)
+def access_token_client_id_not_found_404(self):
+    user: OAuthUser = self.user
+    with self.client.post(f"{user.token_host}/oauth2/token",
+                          data=user.oauth.token_request('authorization_code', pkce=True),
+                          auth=("no_id", user.oauth.clientSecret),
+                          verify=False,
+                          allow_redirects=False,
+                          catch_response=True) as r:
+        if r.status_code == 404:
+            r.success()
+            error_response = r.json()
+            logging.info(
+                f"{get__name__()} - Client ID not found with response code 404 as expected: {error_response['message']}")
+        else:
+            failstr = (f"{get__name__()} - Expected 404 for client ID not found, got  {r.status_code}, "
+                       f"error {r.json().get('message', 'No error description')}")
+            logging.warning(failstr)
+            r.failure(failstr)
+    self.interrupt()
+
+
+@tag('error', '401', 'access_token_client_secret_wrong_401')
+@task(0)
+def access_token_client_secret_wrong_401(self):
+    user: OAuthUser = self.user
+    with self.client.post(f"{user.token_host}/oauth2/token",
+                          data=user.oauth.token_request('authorization_code', pkce=True),
+                          auth=(user.oauth.clientId, 'invalid'),
+                          verify=False,
+                          allow_redirects=False,
+                          catch_response=True) as r:
+        if r.status_code == 401:
+            r.success()
+            error_response = r.json()
+            logging.info(
+                f"{get__name__()} - Client secret is wrong with response code 401 as expected: {error_response['message']}")
+        else:
+            failstr = (f"{get__name__()} - Expected 401 for client secret wrong, got  {r.status_code}, "
+                       f"error {r.json().get('message', 'No error description')}")
+            logging.warning(failstr)
+            r.failure(failstr)
+    self.interrupt()
+
+
+@tag('error', '401', 'access_token_auth_header_error_401')
+@task(0)
+def access_token_with_incorrect_auth_header_401(self):
+    user: OAuthUser = self.user
+    with self.client.post(f"{user.token_host}/oauth2/token",
+                          data=user.oauth.token_request('authorization_code', pkce=True),
+                          headers={"Authorization": "Bearer incorrect_token"},
+                          verify=False,
+                          allow_redirects=False,
+                          catch_response=True) as response:
+        if response.status_code == 401:
+            response.success()
+            error_response = response.json()
+            logging.info(f"{get__name__()} - Unauthorized head 401 as expected:{error_response['message']}")
+        else:
+            failstr = f"{get__name__()} - Expected 401 but got {response.status_code}."
+            logging.error(failstr)
+            response.failure(failstr)
+    self.interrupt()
+
+
+@tag('error', '400', 'access_token_missing_authorization_header_400')
+@task(0)
+def access_token_missing_authorization_header_400(self):
+    user: OAuthUser = self.user
+    with self.client.post(f"{user.token_host}/oauth2/token",
+                          data=user.oauth.token_request(grant_type='authorization_code', pkce=True),
+                          # Removed the basic auth to simulate missing Authorization header
+                          headers={'Authorization': ''},  # TODO not sure how to trigeer the error, get 401 code for this
+                          verify=False,
+                          allow_redirects=False,
+                          catch_response=True) as r:
+        if r.status_code == 400:
+            r.success()
+            error_response = r.json()
+            logging.info(
+                f"{get__name__()} Missing Authorization header and response code 400 as expected: {error_response}")
+        else:
+            failstr = (f"{get__name__()} - Expected 400 for missing Authorization header, got {r.status_code}, "
+                       f"error {r.json().get('error_description', 'No error description')}")
+            logging.warning(failstr)
+            r.failure(failstr)
+    self.interrupt()
+
+
+@tag('error', '400', 'access_token_form_urlencoded_400')
+@task(0)
+def access_token_form_urlencoded_400(self):
+    user: OAuthUser = self.user
+    with self.client.post(f"{user.token_host}/oauth2/token",
+                          headers={"Content-Type": "text/plain"},
+                          data=user.oauth.token_request("invalid_data_structure", pkce=True),
+                          verify=False,
+                          allow_redirects=False,
+                          catch_response=True) as response:
+        if response.status_code == 400:
+            response.success()
+            error_response = response.json()
+            logging.info(
+                f"{get__name__()} - Unable to parse x-www-form-urlencoded status 400 as expected:{error_response['message']}")
+        else:
+            failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
+            logging.error(failstr)
+            response.failure(failstr)
+    self.interrupt()
+
+
+@tag('error', '401', 'access_token_authorization_form_401')
+@task(0)
+def access_token_authorization_form_401(self):
+    user: OAuthUser = self.user
+    with self.client.post(f"{user.token_host}/oauth2/token",
+                          data=user.oauth.token_request('authorization_code', pkce=True),
+                          headers={'Authorization': 'Basic äääää'},
+                          verify=False,
+                          allow_redirects=False,
+                          catch_response=True) as r:
+        if r.status_code == 401:
+            r.success()
+            error_response = r.json()
+            logging.info(f"{get__name__()} - Could not decode auth form 401 as expected: {error_response['message']}")
+        else:
+            failstr = (f"{get__name__()} - Expected 401, got  {r.status_code}, "
+                       f"error {r.json().get('message', 'No error description')}")
+            logging.warning(failstr)
+            r.failure(failstr)
+    self.interrupt()
+
+
 @dataclass(init=True, repr=True, eq=False)
 class OAuthFlow:
     client: InitVar[Client]
@@ -282,6 +439,11 @@ class OAuthUser(HttpUser):
         @tag('access_token')
         class AccessToken(TaskSet):
 
+            tasks = {access_token_invalid_grant_type_400: 1, access_token_client_id_not_found_404: 1,
+                     access_token_client_secret_wrong_401: 1, access_token_with_incorrect_auth_header_401: 1,
+                     access_token_missing_authorization_header_400: 1, access_token_form_urlencoded_400: 1,
+                     access_token_authorization_form_401: 1}
+
             @tag('correct', '200', 'access_token_authorization_code_flow_200')
             @task(1)
             def access_token_authorization_code_flow_200(self):
@@ -299,177 +461,6 @@ class OAuthUser(HttpUser):
                         logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
                     else:
                         logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
-                self.interrupt()
-
-            @tag('error', '400', 'access_token_illegal_grant_type_400')
-            @task(1)
-            def access_token_invalid_grant_type_400(self):
-                user: OAuthUser = self.user  
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request(grant_type='unsupported_grant'),
-                              auth=(user.oauth.clientId, user.oauth.clientSecret),
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 400:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} Invalid grant type and response code 400 as expected: {error_response}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 400 for invalid grant type, got {r.status_code}, "
-                       f"error {r.json().get('error_description', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-
-            @tag('error', '400', 'missing_authorization_header')
-            @task(1)
-            def access_token_missing_authorization_header_400(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                          data=user.oauth.token_request('authorization_code'),
-                          verify=False,
-                          allow_redirects=False,
-                          catch_response=True) as r:
-                    if r.status_code == 400:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} Missing Authorization header and response code 400 as expected: {error_response}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 400 for missing Authorization header, got {r.status_code}, "
-                       f"error {r.json().get('error_description', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-
-            @tag('error', '404', 'client_id_not_found_404')
-            @task(1)
-            def access_token_client_id_not_found_404(self):
-                user: OAuthUser = self.user
-                invalid_client_id = "wrong_client_id"
-                client_secret = user.oauth.clientSecret
-                credentials = base64.b64encode(f"{invalid_client_id}:{client_secret}".encode()).decode('utf-8')
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code'),
-                              auth={"Authorization": credentials},
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 404:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} - Client ID not found with response code 404 as expected: {error_response['message']}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 404 for client ID not found, got  {r.status_code}, "
-                       f"error {r.json().get('message', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-                            
-            @tag('error', '401', 'client_secret_wrong_401')
-            @task(1)
-            def access_token_client_secret_wrong_401(self):
-                user: OAuthUser = self.user
-                invalid_client_secret = "wrong_client_secret"
-                client_id = user.oauth.clientId
-                credentials = base64.b64encode(f"{client_id}:{invalid_client_secret}".encode()).decode('utf-8')
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code'),
-                              auth={"Authorization": credentials},
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 401:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} - Client secret is wrong with response code 401 as expected: {error_response['message']}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 401 for client secret wrong, got  {r.status_code}, "
-                       f"error {r.json().get('message', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-
-            @tag('error', '401', 'access_token_authorization_401')
-            @task(1)
-            def access_token_authorization_form_401(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code'),
-                              auth=("incorrect_client_id", "incorrect_client_secret"),
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 401:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} - Could not decode auth form 401 as expected: {error_response['message']}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 401, got  {r.status_code}, "
-                       f"error {r.json().get('message', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-            
-            @tag('error', '401' , 'authorization_header_error_401')
-            @task(1)
-            def access_token_with_incorrect_auth_header_401(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                                  data=user.oauth.token_request('authorization_code'),
-                                  headers={"Authorization": "Bearer incorrect_token"},
-                                  verify=False,
-                                  allow_redirects=False,
-                                  catch_response=True) as response:
-                    if response.status_code == 401:
-                        response.success()
-                        error_response = response.json()
-                        logging.info(f"{get__name__()} - Unauthorized head 401 as expected:{error_response['message']}")
-                    else:
-                        failstr = f"{get__name__()} - Expected 401 but got {response.status_code}."
-                        logging.error(failstr)
-                        response.failure(failstr)
-                self.interrupt()
-
-        
-            @tag('error', '401' , 'authorization_header_error_401')
-            @task(1)
-            def access_token_with_incorrect_auth_header_401(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                                  data=user.oauth.token_request('authorization_code'),
-                                  headers={"Authorization": "Bearer incorrect_token"},
-                                  verify=False,
-                                  allow_redirects=False,
-                                  catch_response=True) as response:
-                    if response.status_code == 401:
-                        response.success()
-                        error_response = response.json()
-                        logging.info(f"{get__name__()} - Unauthorized head 401 as expected:{error_response['message']}")
-                    else:
-                        failstr = f"{get__name__()} - Expected 401 but got {response.status_code}."
-                        logging.error(failstr)
-                        response.failure(failstr)
-                self.interrupt()
-            
-            @tag('error', '400' , 'Unable_to_parse_form_urlencoded_400')
-            @task(1)
-            def access_token_form_urlencoded_400(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                                  headers={"Content-Type": "text/plain"},
-                                  data=user.oauth.token_request("invalid_data_structure"),
-                                  verify=False,
-                                  allow_redirects=False,
-                                  catch_response=True) as response:
-                    if response.status_code == 400:
-                        response.success()
-                        error_response = response.json()
-                        logging.info(f"{get__name__()} - Unable to parse x-www-form-urlencoded status 400 as expected:{error_response['message']}")
-                    else:
-                        failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
-                        logging.error(failstr)
-                        response.failure(failstr)
                 self.interrupt()
 
     @tag('authorization_code_flow', 'PKCE')
@@ -623,6 +614,11 @@ class OAuthUser(HttpUser):
         @task(1)
         class AccessTokenPKCE(TaskSet):
 
+            tasks = {access_token_invalid_grant_type_400: 1, access_token_client_id_not_found_404: 1,
+                     access_token_client_secret_wrong_401: 1, access_token_with_incorrect_auth_header_401: 1,
+                     access_token_missing_authorization_header_400: 1, access_token_form_urlencoded_400: 1,
+                     access_token_authorization_form_401: 1}
+
             @tag('correct', '200', 'access_token_authorization_code_flow_pkce_200')
             @task(1)
             def access_token_authorization_code_flow_pkce_200(self):
@@ -646,158 +642,7 @@ class OAuthUser(HttpUser):
                         r.failure(failstr)
                 self.interrupt()
                 
-
-            @tag('error', '400', 'access_token_illegal_grant_type_pkce_400')
-            @task(0)
-            def access_token_invalid_grant_type_pkce_400(self):
-                user: OAuthUser = self.user  
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request(grant_type='unsupported_grant', pkce=True),
-                              auth=(user.oauth.clientId, user.oauth.clientSecret),
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 400:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} Invalid grant type and response code 400 as expected: {error_response}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 400 for invalid grant type, got {r.status_code}, "
-                       f"error {r.json().get('error_description', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-
-            @tag('error', '400', 'missing_authorization_header_pkce_400')
-            @task(0)
-            def access_token_missing_authorization_header_pkce_400(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                          data=user.oauth.token_request(grant_type='authorization_code', pkce=True),
-                          #Removed the basic auth to simulate missing Authorization header
-                          verify=False,
-                          allow_redirects=False,
-                          catch_response=True) as r:
-                    if r.status_code == 400:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} Missing Authorization header and response code 400 as expected: {error_response}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 400 for missing Authorization header, got {r.status_code}, "
-                       f"error {r.json().get('error_description', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-
-            @tag('error', '404', 'client_id_not_found_pkce_404')
-            @task(0)
-            def access_token_client_id_not_found_pkce_404(self):
-                user: OAuthUser = self.user
-                invalid_client_id = "wrong_client_id"
-                client_secret = user.oauth.clientSecret
-                credentials = base64.b64encode(f"{invalid_client_id}:{client_secret}".encode()).decode('utf-8')
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code', pkce=True),
-                              auth={"Authorization": credentials},
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 404:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} - Client ID not found with response code 404 as expected: {error_response['message']}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 404 for client ID not found, got  {r.status_code}, "
-                       f"error {r.json().get('message', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-                
-            @tag('error', '401', 'client_secret_wrong_pkce_401')
-            @task(0)
-            def access_token_client_secret_wrong_pkce_401(self):
-                user: OAuthUser = self.user
-                invalid_client_secret = "wrong_client_secret"
-                client_id = user.oauth.clientId
-                credentials = base64.b64encode(f"{client_id}:{invalid_client_secret}".encode()).decode('utf-8')
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code', pkce=True),
-                              auth={"Authorization": credentials},
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 401:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} - Client secret is wrong with response code 401 as expected: {error_response['message']}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 401 for client secret wrong, got  {r.status_code}, "
-                       f"error {r.json().get('message', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-
-            @tag('error', '401', 'access_token_authorization_form_pkce_401')
-            @task(0)
-            def access_token_authorization_form_pkce_401(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=user.oauth.token_request('authorization_code', pkce=True),
-                              auth=("incorrect_client_id", "incorrect_client_secret"),
-                              verify=False,
-                              allow_redirects=False,
-                              catch_response=True) as r:
-                    if r.status_code == 401:
-                       r.success()
-                       error_response = r.json()
-                       logging.info(f"{get__name__()} - Could not decode auth form 401 as expected: {error_response['message']}")
-                    else:
-                       failstr = (f"{get__name__()} - Expected 401, got  {r.status_code}, "
-                       f"error {r.json().get('message', 'No error description')}")
-                       logging.warning(failstr)
-                       r.failure(failstr)
-                self.interrupt()
-
-            @tag('error', '401' , 'authorization_header_error_pkce_401')
-            @task(0)
-            def access_token_with_incorrect_auth_header_pkce_401(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                                  data=user.oauth.token_request('authorization_code', pkce=True),
-                                  headers={"Authorization": "Bearer incorrect_token"},
-                                  verify=False,
-                                  allow_redirects=False,
-                                  catch_response=True) as response:
-                    if response.status_code == 401:
-                        response.success()
-                        error_response = response.json()
-                        logging.info(f"{get__name__()} - Unauthorized head 401 as expected:{error_response['message']}")
-                    else:
-                        failstr = f"{get__name__()} - Expected 401 but got {response.status_code}."
-                        logging.error(failstr)
-                        response.failure(failstr)
-                self.interrupt()
-
-
-            @tag('error', '400' , 'Unable_to_parse_form_urlencoded_pkce_400') 
-            @task(0)
-            def access_token_form_urlencoded_pkce_400(self):
-                user: OAuthUser = self.user
-                with self.client.post(f"{user.token_host}/oauth2/token",
-                                  headers={"Content-Type": "text/plain"},
-                                  data=user.oauth.token_request("invalid_data_structure", pkce=True),
-                                  verify=False,
-                                  allow_redirects=False,
-                                  catch_response=True) as response:
-                    if response.status_code == 400:
-                        response.success()
-                        error_response = response.json()
-                        logging.info(f"{get__name__()} - Unable to parse x-www-form-urlencoded status 400 as expected:{error_response['message']}")
-                    else:
-                        failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
-                        logging.error(failstr)
-                        response.failure(failstr)
-                self.interrupt()
+            # PKCE-specific errors
 
             @tag('error', '400', 'invalid_code_verifier_format_PKCE_400')
             @task(1)

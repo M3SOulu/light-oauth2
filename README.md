@@ -114,16 +114,16 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 400 *`PKCE`: code challenge too long*
     - [x] 400 *`PKCE`: code challenge invalid format*
   - [ ] ~~`oauth2/code@post` ?? *same as `get` but credentials are posted?*~~
-- [ ] `oauth2-token` *access token*
-  - [ ] `oauth2/token@post` *exchange authorization code for access token*
+- [x] `oauth2-token` *access token*
+  - [x] `oauth2/token@post` *exchange authorization code for access token*
     - [x] 200 *correct, token issued*
-    - [ ] 400 *unable to parse `x-www-form-urlencoded` form'
-    - [ ] 400 *illegal value for grant type*
-    - [ ] 400 *authorization header missing*
-    - [ ] 404 *`clientId` not found*
-    - [ ] 401 *wrong `client_secret`*
-    - [ ] 401 *authorization form cannot be decoded*
-    - [ ] 401 *basic authorization header missing (bearer token is passed)* 
+    - [x] 400 *unable to parse `x-www-form-urlencoded` form'
+    - [x] 400 *illegal value for grant type*
+    - [x] 400 *authorization header missing*
+    - [x] 404 *`clientId` not found*
+    - [x] 401 *wrong `client_secret`*
+    - [x] 401 *authorization form cannot be decoded*
+    - [x] 401 *basic authorization header missing (bearer token is passed)* 
     - [x] 400 *`PKCE`: code verifier too short*
     - [x] 400 *`PKCE`: code verifier too long*
     - [x] 400 *`PKCE`: code verifier invalid format*
