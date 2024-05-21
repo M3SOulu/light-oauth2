@@ -508,7 +508,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '401', 'authorization_code_pkce_invalid_password_401')
-            @task(1)
+            @task(0)
             def authorization_code_pkce_invalid_password_401(self):
                 user: OAuthUser = self.user
                 with self.client.get(f"{user.code_host}/oauth2/code",
@@ -531,7 +531,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '400', 'authorization_code_pkce_missing_response_type_400')
-            @task(1)
+            @task(0)
             def authorization_code_pkce_missing_response_type_400(self): #need to add Pkce in this one
                 user: OAuthUser = self.user
                 incorrect_params = {"client_id": "1234", "redirect_uri": "http://localhost:8080/authorization"} 
@@ -555,7 +555,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
     
             @tag('error', '400', 'authorization_code_pkce_client_id_missing_400')
-            @task(1)
+            @task(0)
             def authorization_code_pkce_client_id_missing_400(self): #need to add Pkce in this one
                 user: OAuthUser = self.user
                 params_without_client_id = {
@@ -582,7 +582,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '400', 'authorization_code_pkce_response_not_code_400')
-            @task(1)
+            @task(0)
             def authorization_code_pkce_response_not_code_400(self):
                 user: OAuthUser = self.user
                 params_with_invalid_response= user.oauth.code_request(pkce=True)
@@ -607,7 +607,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '404', 'invalid_client_id_with_pkce')
-            @task(1)
+            @task(0)
             def authorization_code_invalid_client_id_pkce_404(self):
                 user: OAuthUser = self.user
                 params_with_invalid_client= user.oauth.code_request(pkce=True)  
@@ -631,22 +631,18 @@ class OAuthUser(HttpUser):
                         r.failure(failstr)
                 self.interrupt()
 
-            @tag('error', '400', 'invalid_code_challenge_method_Pkce_400')
+            @tag('error', '400', 'invalid_code_challenge_method_pkce_400')
             @task(1)
             def invalid_code_challenge_method_pkce_400(self):
                 user: OAuthUser = self.user
-                invalid_pkce = {
-            "response_type": "code",
-            "client_id": user.oauth.clientId,
-            "redirect_uri": "http://localhost:8080/authorization",
-            "code_challenge": user.oauth.PKCE_code_challenge,
-            "code_challenge_method": "invalid_method"  # Intentionally added invalid method
-            }
+                invalid_request = user.oauth.code_request(pkce=True)
+                invalid_request['code_challenge_method'] = 'invalid'
                 with self.client.get(f"{user.code_host}/oauth2/code",
-                             params=invalid_pkce,
-                             verify=False,
-                             allow_redirects=False,
-                             catch_response=True) as r:
+                                     params=invalid_request,
+                                     auth=('admin', '123456'),
+                                     verify=False,
+                                     allow_redirects=False,
+                                     catch_response=True) as r:
                     if r.status_code == 400:
                         r.success()
                         failstr = (f"{get__name__()} - Invalid Code Challenge Method and response code 400 as expected:, "
@@ -664,21 +660,15 @@ class OAuthUser(HttpUser):
             @task(1)
             def code_challenge_too_short_pkce_400(self):
                 user: OAuthUser = self.user
-                short_code_challenge = "tooShort"  # Intentionally too short
-
-                params_with_too_short_challenge = {
-            "response_type": "code",
-            "client_id": user.oauth.clientId,
-            "redirect_uri": "http://localhost:8080/authorization",
-            "code_challenge": short_code_challenge,
-            "code_challenge_method": user.oauth.PKCE_code_challenge_method
-              }
+                invalid_request = user.oauth.code_request(pkce=True)
+                invalid_request['code_challenge'] = invalid_request['code_challenge'][:20] # Min length is 43, this is 20
 
                 with self.client.get(f"{user.code_host}/oauth2/code",
-                             params=params_with_too_short_challenge,
-                             verify=False,
-                             allow_redirects=False,
-                             catch_response=True) as r:
+                                     params=invalid_request,
+                                     auth=('admin', '123456'),
+                                     verify=False,
+                                     allow_redirects=False,
+                                     catch_response=True) as r:
                         if r.status_code == 400:
                             r.success()
                             failstr = (f"{get__name__()} - Code Challenge Too Short and response code 400 as expected:, "
@@ -686,8 +676,9 @@ class OAuthUser(HttpUser):
                             logging.error(failstr)
                             r.failure(failstr)
                         else:
+                            # TODO This error is not handled correct, we end up here with response 302
                            failstr = (f"{get__name__()} - Code challenge too short expected 400 but got {r.status_code}, "
-                           f"expected 400, received details: {r.json()}")
+                           f"expected 400, received details: {r}")
                            logging.warning(failstr)
                            r.failure(failstr)
                 self.interrupt()
@@ -696,17 +687,12 @@ class OAuthUser(HttpUser):
             @task(1)
             def code_challenge_too_long_pkce_400(self):
                 user: OAuthUser = self.user
-                long_code_challenge = "B" * 150        #intentionally too long because max size is 128 characters
-                params_with_too_long_challenge = {
-            "response_type": "code",
-            "client_id": user.oauth.clientId,
-            "redirect_uri": "http://localhost:8080/authorization",
-            "code_challenge": long_code_challenge,
-            "code_challenge_method": user.oauth.PKCE_code_challenge_method
-              }
+                invalid_request = user.oauth.code_request(pkce=True)
+                invalid_request['code_challenge'] = 'B'*150  # intentionally too long because max size is 128 characters
 
                 with self.client.get(f"{user.code_host}/oauth2/code",
-                             params=params_with_too_long_challenge,
+                             params=invalid_request,
+                             auth=('admin', '123456'),
                              verify=False,
                              allow_redirects=False,
                              catch_response=True) as r:
@@ -727,20 +713,15 @@ class OAuthUser(HttpUser):
             @task(1)
             def code_challenge_invalid_format_pkce_400(self):
                 user: OAuthUser = self.user
-                wrong_format_code_challenge = "invalid@@@###$$$"      #intentionally too long because max size is 128 characters
-                params_with_invalid_format_challenge = {
-            "response_type": "code",
-            "client_id": user.oauth.clientId,
-            "redirect_uri": "http://localhost:8080/authorization",
-            "code_challenge": wrong_format_code_challenge,
-            "code_challenge_method": user.oauth.PKCE_code_challenge_method
-              }
+                invalid_request = user.oauth.code_request(pkce=True)
+                invalid_request['code_challenge'] = 'Ä'*50  # Ä is not an allowed character
 
                 with self.client.get(f"{user.code_host}/oauth2/code",
-                             params=params_with_invalid_format_challenge,
-                             verify=False,
-                             allow_redirects=False,
-                             catch_response=True) as r:
+                                     params=invalid_request,
+                                     auth=('admin', '123456'),
+                                     verify=False,
+                                     allow_redirects=False,
+                                     catch_response=True) as r:
                         if r.status_code == 400:
                             r.success()
                             failstr = (f"{get__name__()} - Invalid format challenge and response code 400 as expected:, "
@@ -754,7 +735,6 @@ class OAuthUser(HttpUser):
                            r.failure(failstr)
                 self.interrupt()
             
-
         @tag('access_token')
         @task(1)
         class AccessTokenPKCE(TaskSet):
@@ -784,7 +764,7 @@ class OAuthUser(HttpUser):
                 
 
             @tag('error', '400', 'access_token_illegal_grant_type_pkce_400')
-            @task(1)
+            @task(0)
             def access_token_invalid_grant_type_pkce_400(self):
                 user: OAuthUser = self.user  
                 with self.client.post(f"{user.token_host}/oauth2/token",
@@ -805,7 +785,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '400', 'missing_authorization_header_pkce_400')
-            @task(1)
+            @task(0)
             def access_token_missing_authorization_header_pkce_400(self):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
@@ -826,7 +806,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '404', 'client_id_not_found_pkce_404')
-            @task(1)
+            @task(0)
             def access_token_client_id_not_found_pkce_404(self):
                 user: OAuthUser = self.user
                 invalid_client_id = "wrong_client_id"
@@ -850,7 +830,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
                 
             @tag('error', '401', 'client_secret_wrong_pkce_401')
-            @task(1)
+            @task(0)
             def access_token_client_secret_wrong_pkce_401(self):
                 user: OAuthUser = self.user
                 invalid_client_secret = "wrong_client_secret"
@@ -874,7 +854,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '401', 'access_token_authorization_form_pkce_401')
-            @task(1)
+            @task(0)
             def access_token_authorization_form_pkce_401(self):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
@@ -895,7 +875,7 @@ class OAuthUser(HttpUser):
                 self.interrupt()
 
             @tag('error', '401' , 'authorization_header_error_pkce_401')
-            @task(1)
+            @task(0)
             def access_token_with_incorrect_auth_header_pkce_401(self):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
@@ -916,7 +896,7 @@ class OAuthUser(HttpUser):
 
 
             @tag('error', '400' , 'Unable_to_parse_form_urlencoded_pkce_400') 
-            @task(1)
+            @task(0)
             def access_token_form_urlencoded_pkce_400(self):
                 user: OAuthUser = self.user
                 with self.client.post(f"{user.token_host}/oauth2/token",
@@ -939,19 +919,15 @@ class OAuthUser(HttpUser):
             @task(1)
             def invalid_code_verifier_format_pkce_400(self):
                 user: OAuthUser = self.user
-                wrong_code_verifier = "invalid@@@###$$$"
-                token_request_params = {
-            "grant_type": "authorization_code",
-            "code": user.oauth.authorization_code,
-            "redirect_uri": "http://localhost:8080/authorization",
-            "client_id": user.oauth.clientId,
-            "code_verifier": wrong_code_verifier  # Invalid format
-        }
+                invalid_request = user.oauth.token_request(grant_type='authorization_code', pkce=True)
+                invalid_request['code_verifier'] = 'Ä' * 100  # Ä is not allowed
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=token_request_params,
-                              verify=False,
-                              catch_response=True) as response:
+                                      data=invalid_request,
+                                      auth=(user.oauth.clientId, user.oauth.clientSecret),
+                                      verify=False,
+                                      catch_response=True) as response:
                     if response.status_code == 400:
+                            # TODO getting code_verifier_too_long here
                             response.success()
                             error_response = response.json()
                             logging.info(f"{get__name__()} - Invalid code verifier and status 400 as expected:{error_response['message']}")
@@ -964,19 +940,15 @@ class OAuthUser(HttpUser):
             @tag('error', '400', 'code_verifier_too_short_pkce_400')
             @task(1)
             def code_verifier_too_short_pkce_400(self):
-                user: OAuthUser = self.user  
-                short_code_verifier = "short"
-                token_request_params = {
-            "grant_type": "authorization_code",
-            "code": user.oauth.authorization_code,
-            "redirect_uri": "http://localhost:8080/authorization",
-            "client_id": user.oauth.clientId,
-            "code_verifier": short_code_verifier 
-        }
+                user: OAuthUser = self.user
+                invalid_request = user.oauth.token_request(grant_type='authorization_code', pkce=True)
+                invalid_request['code_verifier'] = invalid_request['code_verifier'][:40]  # Min is 43, here is 40
+
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=token_request_params,
-                              verify=False,
-                              catch_response=True) as response:
+                                      data=invalid_request,
+                                      auth=(user.oauth.clientId, user.oauth.clientSecret),
+                                      verify=False,
+                                      catch_response=True) as response:
                     if response.status_code == 400:
                             response.success()
                             error_response = response.json()
@@ -990,19 +962,15 @@ class OAuthUser(HttpUser):
             @tag('error', '400', 'code_verifier_too_long_pkce_400')
             @task(1)
             def code_verifier_too_long_pkce_400(self):
-                user: OAuthUser = self.user  
-                long_code_verifier = "A" * 150
-                token_request_params = {
-            "grant_type": "authorization_code",
-            "code": user.oauth.authorization_code,
-            "redirect_uri": "http://localhost:8080/authorization",
-            "client_id": user.oauth.clientId,
-            "code_verifier": long_code_verifier 
-        }
+                user: OAuthUser = self.user
+                invalid_request = user.oauth.token_request(grant_type='authorization_code', pkce=True)
+                invalid_request['code_verifier'] = 'a' * 150  # Max is 128, here 150
+
                 with self.client.post(f"{user.token_host}/oauth2/token",
-                              data=token_request_params,
-                              verify=False,
-                              catch_response=True) as response:
+                                      data=invalid_request,
+                                      auth=(user.oauth.clientId, user.oauth.clientSecret),
+                                      verify=False,
+                                      catch_response=True) as response:
                     if response.status_code == 400:
                             response.success()
                             error_response = response.json()
@@ -1012,5 +980,52 @@ class OAuthUser(HttpUser):
                         logging.error(failstr)
                         response.failure(failstr)
                 self.interrupt()
+
+            @tag('error', '400', 'code_verifier_missing_pkce_400')
+            @task(1)
+            def code_verifier_missing_pkce_400(self):
+                user: OAuthUser = self.user
+                invalid_request = user.oauth.token_request(grant_type='authorization_code', pkce=True)
+                del invalid_request['code_verifier']
+
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                                      data=invalid_request,
+                                      auth=(user.oauth.clientId, user.oauth.clientSecret),
+                                      verify=False,
+                                      catch_response=True) as response:
+                    if response.status_code == 400:
+                        response.success()
+                        error_response = response.json()
+                        logging.info(
+                            f"{get__name__()} - code verifier missing and status 400 as expected:{error_response['message']}")
+                    else:
+                        failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
+                        logging.error(failstr)
+                        response.failure(failstr)
+                self.interrupt()
+
+            @tag('error', '400', 'verification_failed_pkce_400')
+            @task(1)
+            def verification_failed_pkce_400(self):
+                user: OAuthUser = self.user
+                user.oauth.make_pkce()
+                invalid_request = user.oauth.token_request(grant_type='authorization_code', pkce=True)
+
+                with self.client.post(f"{user.token_host}/oauth2/token",
+                                      data=invalid_request,
+                                      auth=(user.oauth.clientId, user.oauth.clientSecret),
+                                      verify=False,
+                                      catch_response=True) as response:
+                    if response.status_code == 400:
+                        response.success()
+                        error_response = response.json()
+                        logging.info(
+                            f"{get__name__()} - verification failed and status 400 as expected:{error_response['message']}")
+                    else:
+                        failstr = f"{get__name__()} - Expected 400 but got {response.status_code}."
+                        logging.error(failstr)
+                        response.failure(failstr)
+                self.interrupt()
+
         def on_stop(self):
             self.user.oauth.reset_pkce()

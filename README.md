@@ -104,11 +104,11 @@ For other dockerfiles and more documentation, see original repo: https://github.
 - [ ] `oauth2-code` *authorization code flow*
   - [ ] `oauth2/code@get` *get authorization code*
     - [x] 302 *redirect with authorization code*
-    - [x] 401 *incorrect password*
-    - [x] 400 *`response_type` missing*
-    - [x] 400 *`client_id` missing*
-    - [x] 400 *`response_type` does not equal `code`*
-    - [x] 404 *`clientId` not found*
+    - [ ] 401 *incorrect password*
+    - [ ] 400 *`response_type` missing*
+    - [ ] 400 *`client_id` missing*
+    - [ ] 400 *`response_type` does not equal `code`*
+    - [ ] 404 *`clientId` not found*
     - [x] 400 *`PKCE`: invalid code challenge method*
     - [x] 400 *`PKCE`: code challenge too short*
     - [x] 400 *`PKCE`: code challenge too long*
@@ -117,18 +117,18 @@ For other dockerfiles and more documentation, see original repo: https://github.
 - [ ] `oauth2-token` *access token*
   - [ ] `oauth2/token@post` *exchange authorization code for access token*
     - [x] 200 *correct, token issued*
-    - [x] 400 *unable to parse `x-www-form-urlencoded` form'
-    - [x] 400 *illegal value for grant type*
-    - [x] 400 *authorization header missing*
-    - [x] 404 *`clientId` not found*
-    - [x] 401 *wrong `client_secret`*
-    - [x] 401 *authorization form cannot be decoded*
-    - [x] 401 *basic authorization header missing (bearer token is passed)* 
+    - [ ] 400 *unable to parse `x-www-form-urlencoded` form'
+    - [ ] 400 *illegal value for grant type*
+    - [ ] 400 *authorization header missing*
+    - [ ] 404 *`clientId` not found*
+    - [ ] 401 *wrong `client_secret`*
+    - [ ] 401 *authorization form cannot be decoded*
+    - [ ] 401 *basic authorization header missing (bearer token is passed)* 
     - [x] 400 *`PKCE`: code verifier too short*
     - [x] 400 *`PKCE`: code verifier too long*
     - [x] 400 *`PKCE`: code verifier invalid format*
-    - [ ] 400 *`PKCE`: code verifier missing*
-    - [ ] 400 *`PKCE`: verification failed*
+    - [x] 400 *`PKCE`: code verifier missing*
+    - [x] 400 *`PKCE`: verification failed*
 - [ ] `oauth2-refresh-token` *manage refresh tokens*
   - [ ] `oauth2/refresh_token@get` *get all refresh tokens*
     - [ ] 200 *correct*
@@ -158,7 +158,7 @@ For other dockerfiles and more documentation, see original repo: https://github.
   - [ ] Resource owner password flow
   - [ ] Refresh token flow
 - [ ] Scope management
-  - [ ] Linking endpoints to clients
+  - [ ] ~~Linking endpoints to clients~~
   - [ ] Scope parameter in code/token requests
 - [ ] Different values of
   - [ ] Service type
