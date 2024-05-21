@@ -450,6 +450,7 @@ class OAuthUser(HttpUser):
                     if r.status_code == 200:
                         r = r.json()
                         access_token = r['access_token']
+                        print(r)
                         user.oauth.access_token = access_token
                         logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
                     else:
