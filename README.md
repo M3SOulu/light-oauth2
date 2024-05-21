@@ -101,19 +101,19 @@ For other dockerfiles and more documentation, see original repo: https://github.
         - [x] 404 *user not found*
         - [x] 401 *incorrect password*
         - [x] 400 *password confirmation failed*
-- [ ] `oauth2-code` *authorization code flow*
-  - [ ] `oauth2/code@get` *get authorization code*
+- [x] `oauth2-code` *authorization code flow*
+  - [x] `oauth2/code@get` *get authorization code*
     - [x] 302 *redirect with authorization code*
-    - [ ] 401 *incorrect password*
-    - [ ] 400 *`response_type` missing*
-    - [ ] 400 *`client_id` missing*
-    - [ ] 400 *`response_type` does not equal `code`*
-    - [ ] 404 *`clientId` not found*
+    - [x] 401 *incorrect password*
+    - [x] 400 *`response_type` missing*
+    - [x] 400 *`response_type` does not equal `code`*
+    - [x] 400 *`client_id` missing*
+    - [x] 404 *`clientId` not found*
     - [x] 400 *`PKCE`: invalid code challenge method*
     - [x] 400 *`PKCE`: code challenge too short*
     - [x] 400 *`PKCE`: code challenge too long*
     - [x] 400 *`PKCE`: code challenge invalid format*
-  - [ ] `oauth2/code@post` ?? *same as `get` but credentials are posted?*
+  - [ ] ~~`oauth2/code@post` ?? *same as `get` but credentials are posted?*~~
 - [ ] `oauth2-token` *access token*
   - [ ] `oauth2/token@post` *exchange authorization code for access token*
     - [x] 200 *correct, token issued*
