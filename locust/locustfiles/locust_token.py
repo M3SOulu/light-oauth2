@@ -141,7 +141,6 @@ def authorization_code_invalid_client_id_404(self):
 
 
 @tag('error', '400', 'access_token_illegal_grant_type_400')
-@task(0)
 def access_token_invalid_grant_type_400(self):
     user: OAuthUser = self.user
     with self.client.post(f"{user.token_host}/oauth2/token",
@@ -163,7 +162,6 @@ def access_token_invalid_grant_type_400(self):
 
 
 @tag('error', '404', 'access_token_client_id_not_found_404')
-@task(0)
 def access_token_client_id_not_found_404(self):
     user: OAuthUser = self.user
     with self.client.post(f"{user.token_host}/oauth2/token",
@@ -186,7 +184,6 @@ def access_token_client_id_not_found_404(self):
 
 
 @tag('error', '401', 'access_token_client_secret_wrong_401')
-@task(0)
 def access_token_client_secret_wrong_401(self):
     user: OAuthUser = self.user
     with self.client.post(f"{user.token_host}/oauth2/token",
@@ -209,7 +206,6 @@ def access_token_client_secret_wrong_401(self):
 
 
 @tag('error', '401', 'access_token_auth_header_error_401')
-@task(0)
 def access_token_with_incorrect_auth_header_401(self):
     user: OAuthUser = self.user
     with self.client.post(f"{user.token_host}/oauth2/token",
@@ -230,7 +226,6 @@ def access_token_with_incorrect_auth_header_401(self):
 
 
 @tag('error', '400', 'access_token_missing_authorization_header_400')
-@task(0)
 def access_token_missing_authorization_header_400(self):
     user: OAuthUser = self.user
     with self.client.post(f"{user.token_host}/oauth2/token",
@@ -254,7 +249,6 @@ def access_token_missing_authorization_header_400(self):
 
 
 @tag('error', '400', 'access_token_form_urlencoded_400')
-@task(0)
 def access_token_form_urlencoded_400(self):
     user: OAuthUser = self.user
     with self.client.post(f"{user.token_host}/oauth2/token",
@@ -276,7 +270,6 @@ def access_token_form_urlencoded_400(self):
 
 
 @tag('error', '401', 'access_token_authorization_form_401')
-@task(0)
 def access_token_authorization_form_401(self):
     user: OAuthUser = self.user
     with self.client.post(f"{user.token_host}/oauth2/token",
