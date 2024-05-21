@@ -627,6 +627,7 @@ class OAuthUser(HttpUser):
                         r = r.json()
                         access_token = r['access_token']
                         user.oauth.access_token = access_token
+                        print(r)
                         logging.info(f"{get__name__()} - Got token with PKCE: {user.oauth!r}")
                     else:
                         failstr = (f"{get__name__()} - Token endpoint with PKCE: Did not get code 200, "
