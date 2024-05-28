@@ -351,6 +351,7 @@ class RefreshTokenFlow(TaskSet):
     def refresh_token_200(self):
         user: OAuthUser = self.user
         if user.oauth.refresh_token is None:
+            logging.info(f'{get__name__()} - was invoked but no refresh token available, rescheduling')
             self.interrupt(reschedule=True)
 
         with self.client.post(f"{user.token_host}/oauth2/token",
