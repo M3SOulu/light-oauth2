@@ -459,9 +459,8 @@ class AuthorizationCodeFlow(OAuthUser):
                                       catch_response = True) as r:
                     if r.status_code == 200:
                         r = r.json()
-                        access_token = r['access_token']
-                        print(r)
-                        user.oauth.access_token = access_token
+                        user.oauth.access_token = r['access_token']
+                        user.oauth.refresh_token = r.get('refresh_token', None)
                         logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
                     else:
                         logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
@@ -646,9 +645,8 @@ class AuthorizationCodeFlowPKCE(OAuthUser):
                     if r.status_code == 200:
                         r.success()
                         r = r.json()
-                        access_token = r['access_token']
-                        user.oauth.access_token = access_token
-                        print(r)
+                        user.oauth.access_token = r['access_token']
+                        user.oauth.refresh_token = r.get('refresh_token', None)
                         logging.info(f"{get__name__()} - Got token with PKCE: {user.oauth!r}")
                     else:
                         failstr = (f"{get__name__()} - Token endpoint with PKCE: Did not get code 200, "
