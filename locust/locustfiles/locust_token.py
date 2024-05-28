@@ -352,7 +352,7 @@ class RefreshTokenFlow(TaskSet):
 
     def on_start(self):
         if self.user.oauth.refresh_token is None:
-            logging.info(f'{get__name__()} - was invoked but no refresh token available, rescheduling')
+            logging.info(f'{self.__class__.__name__} - was invoked but no refresh token available, rescheduling')
             self.interrupt(reschedule=True)
 
     @tag('correct', '200', 'refresh_token_200')
@@ -488,7 +488,7 @@ class AuthorizationCodeFlow(OAuthUser):
 
         def on_start(self):
             if self.user.oauth.authorization_code is None:
-                logging.info(f'{get__name__()} - was invoked but no authorizaton code available, rescheduling')
+                logging.info(f'{self.__class__.__name__} - was invoked but no authorizaton code available, rescheduling')
                 self.interrupt(reschedule=True)
 
         tasks = {access_token_invalid_grant_type_400: 1, access_token_client_id_not_found_404: 1,
@@ -679,7 +679,7 @@ class AuthorizationCodeFlowPKCE(OAuthUser):
 
         def on_start(self):
             if self.user.oauth.authorization_code is None:
-                logging.info(f'{get__name__()} - was invoked but no authorizaton code available, rescheduling')
+                logging.info(f'{self.__class__.__name__} - was invoked but no authorizaton code available, rescheduling')
                 self.interrupt(reschedule=True)
 
         tasks = {access_token_invalid_grant_type_400: 1, access_token_client_id_not_found_404: 1,
