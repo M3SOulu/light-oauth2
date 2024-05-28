@@ -395,6 +395,9 @@ class OAuthUser(HttpUser):
     @tag('correct')
     @task(1)
     def change_client(self):
+        if len(CLIENTS) == 0:
+            logging.info(f'{get__name__()} - was invoked, but no other clients available, rescheduling')
+            return
         new_cl = CLIENTS.pop()
         CLIENTS.add(self.cl)
         old_clid = self.cl.clientId
