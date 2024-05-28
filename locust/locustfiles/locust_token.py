@@ -335,9 +335,38 @@ class OAuthFlow:
         if grant_type == 'authorization_code':
             request["code"] = self.authorization_code
             request["redirect_uri"] = "http://localhost:8080/authorization"
+        elif grant_type == 'refresh_token':
+            request['refresh_token'] = self.refresh_token
+            request['client_id'] = self.clientId
+            request['client_secret'] = self.clientSecret
         if pkce:
             request["code_verifier"] = self.PKCE_code_verifier
         return request
+
+
+class RefreshTokenFlow(TaskSet):
+
+    @tag('correct', '200', 'refresh_token_200')
+    @task(1)
+    def refresh_token_200(self):
+        user: OAuthUser = self.user
+        if user.oauth.refresh_token is None:
+            self.interrupt(reschedule=True)
+
+        with self.client.post(f"{user.token_host}/oauth2/token",
+                              data=user.oauth.token_request('refresh_token'),
+                              auth=(user.oauth.clientId, user.oauth.clientSecret),
+                              verify=False,
+                              allow_redirects=False,
+                              catch_response = True) as r:
+            if r.status_code == 200:
+                r = r.json()
+                user.oauth.access_token = r['access_token']
+                user.oauth.refresh_token = r.get('refresh_token', None)
+                logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
+            else:
+                logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
+        self.interrupt()
 
 
 class OAuthUser(HttpUser):
@@ -397,6 +426,8 @@ class ClientCredentialsFlow(OAuthUser):
 class AuthorizationCodeFlow(OAuthUser):
 
     is_pkce = False
+
+    tasks = {RefreshTokenFlow: 1}
 
     @tag('authorization_code_flow', 'noPKCE')
     @task(1)
@@ -470,6 +501,8 @@ class AuthorizationCodeFlow(OAuthUser):
 class AuthorizationCodeFlowPKCE(OAuthUser):
 
     is_pkce = True
+
+    tasks = {RefreshTokenFlow: 1}
 
     @tag('authorization_code_flow', 'PKCE')
     @task(1)
