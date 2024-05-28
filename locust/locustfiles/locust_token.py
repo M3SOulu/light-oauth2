@@ -392,6 +392,7 @@ class OAuthUser(HttpUser):
         self.cl = CLIENTS.pop()
         self.oauth = OAuthFlow(self.cl)
 
+    @tag('correct')
     @task(1)
     def change_client(self):
         new_cl = CLIENTS.pop()
