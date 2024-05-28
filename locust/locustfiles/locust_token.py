@@ -347,14 +347,15 @@ class OAuthFlow:
 @tag('refresh_token')
 class RefreshTokenFlow(TaskSet):
 
+    def on_start(self):
+        if self.user.oauth.refresh_token is None:
+            logging.info(f'{get__name__()} - was invoked but no refresh token available, rescheduling')
+            self.interrupt(reschedule=True)
+
     @tag('correct', '200', 'refresh_token_200')
     @task(1)
     def refresh_token_200(self):
         user: OAuthUser = self.user
-        if user.oauth.refresh_token is None:
-            logging.info(f'{get__name__()} - was invoked but no refresh token available, rescheduling')
-            self.interrupt(reschedule=True)
-
         with self.client.post(f"{user.token_host}/oauth2/token",
                               data=user.oauth.token_request('refresh_token'),
                               auth=(user.oauth.clientId, user.oauth.clientSecret),
