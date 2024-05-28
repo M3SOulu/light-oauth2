@@ -345,11 +345,12 @@ class OAuthUser(HttpUser):
     host = "https://localhost:6882"
     abstract = True
     is_pkce = None
+    token_host = "https://localhost:6882"
+    code_host = "https://localhost:6881"
 
     def on_start(self):
-        sleep(1.)
-        self.token_host = "https://localhost:6882"
-        self.code_host = "https://localhost:6881"
+        while len(CLIENTS) == 0:
+            sleep(1.)
         self.cl = CLIENTS.pop()
         self.oauth = OAuthFlow(self.cl)
 
