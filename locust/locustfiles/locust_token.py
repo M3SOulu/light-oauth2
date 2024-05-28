@@ -1,6 +1,6 @@
 from .mylogging import get__name__
 
-from locust import HttpUser, task, SequentialTaskSet, TaskSet, tag
+from locust import HttpUser, task, TaskSet, tag
 
 import logging
 from urllib.parse import urlparse, parse_qs
@@ -13,6 +13,9 @@ from time import sleep
 from .locust_client import CLIENTS, Client
 
 __all__ = ['OAuthUser', 'AuthorizationCodeFlow', 'AuthorizationCodeFlowPKCE', 'ClientCredentialsFlow']
+
+from .myset import set_with_choice
+REFRESH_TOKENS = set_with_choice()
 
 
 @tag('error', '401', 'authorization_code_invalid_password_401')
@@ -314,6 +317,7 @@ class OAuthFlow:
     def reset_oauth(self) -> None:
         self.authorization_code = None
         self.access_token = None
+        REFRESH_TOKENS.discard(self.refresh_token)
         self.refresh_token = None
 
     def reset_pkce(self) -> None:
@@ -369,7 +373,9 @@ class RefreshTokenFlow(TaskSet):
                 r.success()
                 r = r.json()
                 user.oauth.access_token = r['access_token']
+                REFRESH_TOKENS.discard(user.oauth.refresh_token)
                 user.oauth.refresh_token = r.get('refresh_token', None)
+                REFRESH_TOKENS.add(user.oauth.refresh_token)
                 logging.info(f"{get__name__()} - Got token {user.oauth!r}")
             else:
                 failstr = f"{get__name__()} - Did not get code 200, code {r.status_code}, error {r.json()}"
@@ -510,6 +516,7 @@ class AuthorizationCodeFlow(OAuthUser):
                     r = r.json()
                     user.oauth.access_token = r['access_token']
                     user.oauth.refresh_token = r.get('refresh_token', None)
+                    REFRESH_TOKENS.add(user.oauth.refresh_token)
                     logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
                 else:
                     logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
@@ -702,6 +709,7 @@ class AuthorizationCodeFlowPKCE(OAuthUser):
                     r = r.json()
                     user.oauth.access_token = r['access_token']
                     user.oauth.refresh_token = r.get('refresh_token', None)
+                    REFRESH_TOKENS.add(user.oauth.refresh_token)
                     logging.info(f"{get__name__()} - Got token with PKCE: {user.oauth!r}")
                 else:
                     failstr = (f"{get__name__()} - Token endpoint with PKCE: Did not get code 200, "
@@ -830,3 +838,138 @@ class AuthorizationCodeFlowPKCE(OAuthUser):
         def on_stop(self):
             self.user.oauth.reset_pkce()
             self.user.oauth.authorization_code = None
+
+
+class RefreshTokenCRUD(HttpUser):
+
+    fixed_count = 1
+    host = 'https://localhost:6887'
+
+    @tag('get')
+    @task(1)
+    class GetToken(TaskSet):
+
+        def on_start(self):
+            while len(REFRESH_TOKENS) == 0:
+                sleep(1.)
+
+        @tag('correct', '200', 'get_token_200')
+        @task(1)
+        def refresh_token_get_200(self):
+            try:
+                token = REFRESH_TOKENS.choice()
+            except KeyError:
+                self.interrupt()
+            with self.client.get(f"/oauth2/refresh_token/{token}",
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"{get__name__()} - Got token: {token}")
+                    r.success()
+                else:
+                    failure_str = (f'{get__name__()}- did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
+
+        @tag('error', '404', 'get_token_404')
+        @task(1)
+        def refresh_token_get_404(self):
+            with self.client.get(f"/oauth2/refresh_token/AAAAAA",  # Invalid token
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info(f"{get__name__()} - tried to get bad token, status 404 as expected.")
+                    r.success()
+                else:
+                    failure_str = (f'{get__name__()}- did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
+
+    @tag('delete')
+    @task(1)
+    class DeleteToken(TaskSet):
+
+        def on_start(self):
+            while len(REFRESH_TOKENS) == 0:
+                sleep(1.)
+
+        @tag('correct', '200', 'delete_token_200')
+        @task(1)
+        def refresh_token_delete_200(self):
+            try:
+                token = REFRESH_TOKENS.choice()
+            except KeyError:
+                self.interrupt()
+            with self.client.delete(f"/oauth2/refresh_token/{token}",
+                                    verify=False,
+                                    allow_redirects=False,
+                                    catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"{get__name__()} - Deleted token: {token}")
+                    r.success()
+                else:
+                    failure_str = (f'{get__name__()}- did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
+
+        @tag('error', '404', 'delete_token_404')
+        @task(1)
+        def refresh_token_delete_404(self):
+            with self.client.delete(f"/oauth2/refresh_token/AAAAAA",  # Invalid token
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 404:
+                    logging.info(f"{get__name__()} - tried to delete bad token, status 404 as expected.")
+                    r.success()
+                else:
+                    failure_str = (f'{get__name__()}- did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
+
+    @tag('get')
+    @task(1)
+    class GetTokenPage(TaskSet):
+        @task(1)
+        @tag('correct', '200', 'get_token_page_200')
+        def get_token_page_200(self):
+            with self.client.get(f"/oauth2/refresh_token", params={'page': '1'},
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 200:
+                    logging.info(f"{get__name__()} - got token page with status_code 200")
+                    r.success()
+                else:
+                    failure_str = (f'{get__name__()} - token page get did not return code 200, code {r.status_code}, '
+                                   f'error {r.json()}')
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()
+
+        @task(1)
+        @tag('error', '400', 'get_token_page_400_no_page')
+        def get_token_page_400_no_page(self):
+            with self.client.get("/oauth2/refresh_token", params={},
+                                 verify=False,
+                                 allow_redirects=False,
+                                 catch_response=True) as r:
+                if r.status_code == 400:
+                    logging.error(f"{get__name__()} - Called token page without page, status 400 as expected.")
+                    r.success()
+                else:
+                    failure_str = (f"{get__name__()} - token page get did not return code 400, code {r.status_code}, "
+                                   f"error {r.json()}")
+                    logging.warning(failure_str)
+                    r.failure(failure_str)
+            self.interrupt()

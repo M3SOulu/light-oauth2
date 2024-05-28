@@ -141,13 +141,13 @@ For other dockerfiles and more documentation, see original repo: https://github.
       - [ ] 200 *correct*
       - [ ] 404 *refresh token not found*
       - [ ] 400 *invalid refresh token*
-- [ ] `oauth2-key` *encryption key exchange*
-    - [ ] `oauth2/key/{keyId}@get` *get public key for JWT verification*
-      - [ ] 200 *correct*
-      - [ ] 401 *missing authorization with client credentials*
-      - [ ] 401 *wrong client secret*
-      - [ ] 404 *`clientId` not found*
-      - [ ] 500 *`keyId `not found on server*
+- [ ] ~~`oauth2-key` *encryption key exchange*~~
+    - [ ] ~~`oauth2/key/{keyId}@get` *get public key for JWT verification*~~
+      - [ ] ~~200 *correct*~~
+      - [ ] ~~401 *missing authorization with client credentials*~~
+      - [ ] ~~401 *wrong client secret*~~
+      - [ ] ~~404 *`clientId` not found*~~
+      - [ ] ~~500 *`keyId `not found on server*~~
 
 # Pipelines to implement
 
