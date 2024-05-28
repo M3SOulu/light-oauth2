@@ -344,6 +344,9 @@ class OAuthFlow:
         return request
 
 
+OAUTH_SESSIONS = dict()
+
+
 @tag('refresh_token')
 class RefreshTokenFlow(TaskSet):
 
@@ -389,12 +392,16 @@ class OAuthUser(HttpUser):
         self.cl = CLIENTS.pop()
         self.oauth = OAuthFlow(self.cl)
 
-    @task(0)
+    @task(1)
     def change_client(self):
         new_cl = CLIENTS.pop()
         CLIENTS.add(self.cl)
+        old_clid = self.cl.clientId
+        new_clid = new_cl.clientId
         self.cl = new_cl
-        self.oauth = OAuthFlow(new_cl)
+        OAUTH_SESSIONS[self.oauth.clientId] = self.oauth
+        self.oauth = OAUTH_SESSIONS.get(new_cl.clientId, OAuthFlow(new_cl))
+        logging.info(f'{get__name__()} - changed client from {old_clid} to {new_clid}')
 
 
 class ClientCredentialsFlow(OAuthUser):
