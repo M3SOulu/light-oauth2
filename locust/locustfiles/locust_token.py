@@ -360,12 +360,15 @@ class RefreshTokenFlow(TaskSet):
                               allow_redirects=False,
                               catch_response = True) as r:
             if r.status_code == 200:
+                r.success()
                 r = r.json()
                 user.oauth.access_token = r['access_token']
                 user.oauth.refresh_token = r.get('refresh_token', None)
-                logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
+                logging.info(f"{get__name__()} - Got token {user.oauth!r}")
             else:
-                logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
+                failstr = f"{get__name__()} - Did not get code 200, code {r.status_code}, error {r.json()}"
+                logging.warning(failstr)
+                r.failure(failstr)
         self.interrupt()
 
 
