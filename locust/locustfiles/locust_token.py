@@ -504,6 +504,9 @@ class AuthorizationCodeFlow(OAuthUser):
                     logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
             self.interrupt()
 
+        def on_stop(self):
+            self.user.oauth.authorization_code = None
+
 
 class AuthorizationCodeFlowPKCE(OAuthUser):
 
@@ -815,3 +818,4 @@ class AuthorizationCodeFlowPKCE(OAuthUser):
 
         def on_stop(self):
             self.user.oauth.reset_pkce()
+            self.user.oauth.authorization_code = None
