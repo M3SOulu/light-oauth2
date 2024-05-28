@@ -344,6 +344,7 @@ class OAuthFlow:
         return request
 
 
+@tag('refresh_token')
 class RefreshTokenFlow(TaskSet):
 
     @tag('correct', '200', 'refresh_token_200')
