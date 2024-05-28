@@ -12,7 +12,7 @@ from time import sleep
 
 from .locust_client import CLIENTS, Client
 
-__all__ = ['OAuthUser', 'AuthorizationCodeFlow', 'AuthorizationCodeFlowPKCE']
+__all__ = ['OAuthUser', 'AuthorizationCodeFlow', 'AuthorizationCodeFlowPKCE', 'ClientCredentialsFlow']
 
 
 @tag('error', '401', 'authorization_code_invalid_password_401')
@@ -360,6 +360,9 @@ class OAuthUser(HttpUser):
         CLIENTS.add(self.cl)
         self.cl = new_cl
         self.oauth = OAuthFlow(new_cl)
+
+
+class ClientCredentialsFlow(OAuthUser):
 
     @tag('client_credentials_flow')
     @task(1)

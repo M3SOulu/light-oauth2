@@ -1,3 +1,3 @@
-from locustfiles import ServiceRegistration, ClientRegistration, UserRegistration, OAuthUser, AuthorizationCodeFlow, AuthorizationCodeFlowPKCE
+from locustfiles import ServiceRegistration, ClientRegistration, UserRegistration, OAuthUser, AuthorizationCodeFlow, AuthorizationCodeFlowPKCE, ClientCredentialsFlow
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
