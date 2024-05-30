@@ -8,7 +8,7 @@ metrics_file="prometheus_metrics.txt"
 locust_command="locust --config locust.conf"
 
 # List of tags for different test scenarios
-declare -a tags=("correct" "update_client_404_ownerId")
+declare -a tags=("update_client_404_ownerId")
 
 # Ensure the main output directory exists
 mkdir -p "$output_directory"
@@ -30,7 +30,7 @@ for tag in "${tags[@]}"; do
     start_time=$(date +%s)
 
     # Start the Locust test for this tag
-    $locust_command --tags $tag &
+    $locust_command --tags correct $tag &
 
     # Wait for Locust to finish
     wait
