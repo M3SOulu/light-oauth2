@@ -53,5 +53,10 @@ for tag in "${tags[@]}"; do
 
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
     python $python_script $prometheus_url "$tag_output_directory" "${metric_names[@]}" "$start_time"
+
+    #Move locust log
+    mv locust/locust.log $tag_output_directory
+
+    # Stop the system
     docker compose -f docker-compose-oauth2-mysql.yml down -v
 done
