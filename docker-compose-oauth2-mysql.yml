@@ -206,6 +206,7 @@
 
     prometheus:
       image: prom/prometheus:latest
+      user: root
       volumes:
         - ./prometheus.yml:/etc/prometheus/prometheus.yml
       command:
