@@ -5,7 +5,7 @@ prometheus_url="http://localhost:9090"
 output_directory="csv_output"
 python_script="prom_jaeger.py"
 metrics_file="prometheus_metrics.txt"
-locust_command="locust --config locust.conf"
+locust_command="locust --config locust/locust.conf"
 
 # List of tags for different test scenarios
 declare -a tags=("update_client_404_ownerId" "register_service_400_service_type")
@@ -39,7 +39,9 @@ for tag in "${tags[@]}"; do
     mkdir -p "$tag_output_directory"
     cp "$metrics_file" "$tag_output_directory/$metrics_file"  # Copy metrics file to tag directory
 
+    # Start the system and initialize MySQL database
     deploy
+
     # Record the start time
     start_time=$(date +%s)
 
