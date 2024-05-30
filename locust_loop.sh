@@ -8,7 +8,7 @@ metrics_file="prometheus_metrics.txt"
 locust_command="locust --config locust.conf"
 
 # List of tags for different test scenarios
-declare -a tags=("update_client_404_ownerId", "register_service_400_service_type")
+declare -a tags=("update_client_404_ownerId" "register_service_400_service_type")
 
 # Ensure the main output directory exists
 mkdir -p "$output_directory"
