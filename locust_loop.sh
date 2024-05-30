@@ -5,7 +5,7 @@ prometheus_url="http://localhost:9090"
 output_directory="csv_output"
 python_script="prom_jaeger.py"
 metrics_file="prometheus_metrics.txt"
-locust_command="locust -f ./locust/locust_main.py --headless -t 15s"
+locust_command="locust --config locust.conf"
 
 # List of tags for different test scenarios
 declare -a tags=("correct" "update_client_404_ownerId")
