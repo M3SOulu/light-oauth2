@@ -8,18 +8,10 @@ metrics_file="prometheus_metrics.txt"
 locust_command="locust --config locust/locust.conf"
 
 # List of error_tags for different test scenarios
-# declare -a error_tags=("update_client_404_ownerId" "register_service_400_service_type")
 error_tags=($(grep -oP "@tag\('error'.*'\K[^']*(?='\))" -r locust/locustfiles/ -h))
 
 # Ensure the main output directory exists
 mkdir -p "$output_directory"
-
-docker compose -f docker-compose-oauth2-mysql.yml up --force-recreate -d
-
-# Fetch metric names once and save them globally
-python -c "import requests; resp = requests.get('$prometheus_url/api/v1/label/__name__/values'); open('$metrics_file', 'w').write('\n'.join(resp.json()['data']))"
-
-wait
 
 # Read metric names into an array
 readarray -t metric_names < "$metrics_file"
