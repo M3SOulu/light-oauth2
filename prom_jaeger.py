@@ -126,9 +126,9 @@ def fetch_jaeger_traces(jaeger_url, service_name, start_time, end_time):
 if __name__ == "__main__":
     prometheus_url = sys.argv[1]
     output_directory = sys.argv[2]
-    metric_names = sys.argv[3:-1]  # The last argument is start_time
-    start_time = datetime.fromtimestamp(int(sys.argv[-1]), tz=timezone.utc)
-    
+    start_time = datetime.fromtimestamp(int(sys.argv[3]), tz=timezone.utc)
+    metric_names = sys.argv[4:]  # Remaining arguments are metrics
+
     # Hardcoded Jaeger services
     jaeger_services = ['oauth2-code-service','oauth2-service-service', 'oauth2-token-service', 'jaeger-all-in-one', 'oauth2-user-service', 'oauth2-client-service', 'oauth2-refresh-token-service', 'oauth2-key-service']
     jaeger_url = "http://localhost:16686"  # Jaeger Query Service URL
@@ -140,11 +140,6 @@ if __name__ == "__main__":
     output_directory = sys.argv[2]
     metric_names = [name.rstrip('\r') for name in sys.argv[3:]]  # Strip carriage returns
 
-    # Load the last fetch time, if available
-    start_time = load_last_fetch_time(last_fetch_time_file)
-    if not start_time:
-        start_time = datetime.now(timezone.utc) - timedelta(seconds=5)  # Default to 5 seconds ago if not found
-    
     # Current run's end time is now
     end_time = datetime.now(timezone.utc)
 
