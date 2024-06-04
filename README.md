@@ -129,18 +129,16 @@ For other dockerfiles and more documentation, see original repo: https://github.
     - [x] 400 *`PKCE`: code verifier invalid format*
     - [x] 400 *`PKCE`: code verifier missing*
     - [x] 400 *`PKCE`: verification failed*
-- [ ] `oauth2-refresh-token` *manage refresh tokens*
-  - [ ] `oauth2/refresh_token@get` *get all refresh tokens*
-    - [ ] 200 *correct*
-    - [ ] 400 *`page` parameter missing*
-  - [ ] `oauth2/refresh_token/{refreshToken}@get` *get particular `refresh_token` info*
-    - [ ] 200 *correct*
-    - [ ] 404 *refresh token not found*
-    - [ ] 400 *invalid refresh token*
-  - [ ] `oauth2/refresh_token/{refreshToken}@delete` *delete `refresh_token`*
-      - [ ] 200 *correct*
-      - [ ] 404 *refresh token not found*
-      - [ ] 400 *invalid refresh token*
+- [x] `oauth2-refresh-token` *manage refresh tokens*
+  - [x] `oauth2/refresh_token@get` *get all refresh tokens*
+    - [x] 200 *correct*
+    - [x] 400 *`page` parameter missing*
+  - [x] `oauth2/refresh_token/{refreshToken}@get` *get particular `refresh_token` info*
+    - [x] 200 *correct*
+    - [x] 404 *refresh token not found*
+  - [x] `oauth2/refresh_token/{refreshToken}@delete` *delete `refresh_token`*
+      - [x] 200 *correct*
+      - [x] 404 *refresh token not found*
 - [ ] ~~`oauth2-key` *encryption key exchange*~~
     - [ ] ~~`oauth2/key/{keyId}@get` *get public key for JWT verification*~~
       - [ ] ~~200 *correct*~~
