@@ -36,6 +36,7 @@ deploy()
   docker exec light-oauth2-mysqldb-1 sh -c 'mysql -uroot -prootpassword < /docker-entrypoint-initdb.d/create_mysql.sql'
 }
 
+deploy
 # Loop through each tag and perform tests
 for tag in "${tags[@]}"; do
     # Set up directories and files for this tag
@@ -44,7 +45,6 @@ for tag in "${tags[@]}"; do
     cp "$metrics_file" "$tag_output_directory/$metrics_file"  # Copy metrics file to tag directory
 
     # Start the system and initialize MySQL database
-    deploy
 
     # Record the start time
     start_time=$(date +%s)
@@ -60,7 +60,6 @@ for tag in "${tags[@]}"; do
 
     #Move locust log
     mv locust/locust.log $tag_output_directory
-
-    # Stop the system
-    docker compose -f docker-compose-oauth2-mysql.yml down -v
 done
+  # Stop the system
+  docker compose -f docker-compose-oauth2-mysql.yml down -v
