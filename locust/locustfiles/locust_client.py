@@ -190,8 +190,7 @@ class ClientRegistration(HttpUser):
         @tag('error', 'update', '400', 'update_client_400_clientType')
         def update_client_400_clientType(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
             c2 = replace(c, clientType="none")
@@ -216,8 +215,7 @@ class ClientRegistration(HttpUser):
         @tag('error', 'update', '400', 'update_client_400_clientProfile')
         def update_client_400_clientProfile(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
             c2 = replace(c, clientProfile="none")
@@ -242,8 +240,7 @@ class ClientRegistration(HttpUser):
         @tag('error', 'update', '404', 'update_client_404_ownerId')
         def update_client_404_ownerId(self):
             try:
-                c = CLIENTS.pop()
-                CLIENTS.add(c)
+                c = CLIENTS.choice()
             except KeyError:
                 self.interrupt()
             c2 = replace(c, ownerId="nouser")
