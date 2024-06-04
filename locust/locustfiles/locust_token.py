@@ -513,13 +513,16 @@ class AuthorizationCodeFlow(OAuthUser):
                                   allow_redirects=False,
                                   catch_response = True) as r:
                 if r.status_code == 200:
+                    r.success()
                     r = r.json()
                     user.oauth.access_token = r['access_token']
                     user.oauth.refresh_token = r.get('refresh_token', None)
                     REFRESH_TOKENS.add(user.oauth.refresh_token)
-                    logging.info(f"Access Token Authorization Code Flow: {user.oauth!r}")
+                    logging.info(f"{get__name__()}: Got access token {user.oauth!r}")
                 else:
-                    logging.warning(f"Access Token Authorization Code Flow: Did not get code 200, error {r.json()}")
+                    fail_str = f"{get__name__()}: Did not get code 200, error {r.json()}"
+                    logging.warning(fail_str)
+                    r.failure(fail_str)
             self.interrupt()
 
         def on_stop(self):
