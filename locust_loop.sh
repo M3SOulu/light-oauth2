@@ -8,7 +8,8 @@ metrics_file="prometheus_metrics.txt"
 locust_command="locust --config locust/locust.conf"
 
 # List of error_tags for different test scenarios
-error_tags=($(grep -oP "@tag\('error'.*'\K[^']*(?='\))" -r locust/locustfiles/ -h))
+error_tags=("correct")
+error_tags+=($(grep -oP "@tag\('error'.*'\K[^']*(?='\))" -r locust/locustfiles/ -h))
 
 # Ensure the main output directory exists
 mkdir -p "$output_directory"
@@ -37,13 +38,15 @@ for tag in "${error_tags[@]}"; do
     mkdir -p "$tag_output_directory"
     cp "$metrics_file" "$tag_output_directory/$metrics_file"  # Copy metrics file to tag directory
 
-    # Start the system and initialize MySQL database
-
     # Record the start time
     start_time=$(date +%s)
 
     # Start the Locust test for this tag
-    $locust_command --tags correct $tag &
+    if [ "$tag" == "correct"]; then
+      $locust_command --tags correct --run-time 1m &
+    else
+      $locust_command --tags correct $tag &
+    fi
 
     # Wait for Locust to finish
     wait
