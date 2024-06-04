@@ -7,8 +7,9 @@ python_script="prom_jaeger.py"
 metrics_file="prometheus_metrics.txt"
 locust_command="locust --config locust/locust.conf"
 
-# List of tags for different test scenarios
-declare -a tags=("update_client_404_ownerId" "register_service_400_service_type")
+# List of error_tags for different test scenarios
+# declare -a error_tags=("update_client_404_ownerId" "register_service_400_service_type")
+error_tags=($(grep -oP "@tag\('error'.*'\K[^']*(?='\))" -r locust/locustfiles/ -h))
 
 # Ensure the main output directory exists
 mkdir -p "$output_directory"
@@ -38,7 +39,7 @@ deploy()
 
 deploy
 # Loop through each tag and perform tests
-for tag in "${tags[@]}"; do
+for tag in "${error_tags[@]}"; do
     # Set up directories and files for this tag
     tag_output_directory="${output_directory}/${tag}"
     mkdir -p "$tag_output_directory"
@@ -50,7 +51,7 @@ for tag in "${tags[@]}"; do
     start_time=$(date +%s)
 
     # Start the Locust test for this tag
-    $locust_command --tags correct $tag &
+    $locust_command --error_tags correct $tag &
 
     # Wait for Locust to finish
     wait
