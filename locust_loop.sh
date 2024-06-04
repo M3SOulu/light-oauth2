@@ -51,7 +51,7 @@ for tag in "${error_tags[@]}"; do
     start_time=$(date +%s)
 
     # Start the Locust test for this tag
-    $locust_command --error_tags correct $tag &
+    $locust_command --tags correct $tag &
 
     # Wait for Locust to finish
     wait
