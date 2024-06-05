@@ -34,7 +34,7 @@
         - ./opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       environment:
         - OTEL_RESOURCE_ATTRIBUTES=service.name=oauth2-code-service
-        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=prometheus -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
+        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=none -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
       networks:
         - localnet
       depends_on:
@@ -57,7 +57,7 @@
         - ./opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       environment:
         - OTEL_RESOURCE_ATTRIBUTES=service.name=oauth2-token-service
-        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=prometheus -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
+        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=none -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
       networks:
         - localnet
       depends_on:
@@ -79,7 +79,7 @@
         - ./opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       environment:
         - OTEL_RESOURCE_ATTRIBUTES=service.name=oauth2-service-service
-        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=prometheus -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
+        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=none -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
       networks:
         - localnet
       depends_on:
@@ -101,7 +101,7 @@
         - ./opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       environment:
         - OTEL_RESOURCE_ATTRIBUTES=service.name=oauth2-client-service
-        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=prometheus -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
+        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=none -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
       networks:
         - localnet
       depends_on:
@@ -123,7 +123,7 @@
         - ./opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       environment:
         - OTEL_RESOURCE_ATTRIBUTES=service.name=oauth2-user-service
-        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=prometheus -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
+        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=none -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
       networks:
         - localnet
       depends_on:
@@ -145,7 +145,7 @@
         - ./opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       environment:
         - OTEL_RESOURCE_ATTRIBUTES=service.name=oauth2-key-service
-        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=prometheus -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
+        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=none -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
       networks:
         - localnet
       depends_on:
@@ -167,7 +167,7 @@
         - ./opentelemetry-javaagent.jar:/opt/opentelemetry-javaagent.jar
       environment:
         - OTEL_RESOURCE_ATTRIBUTES=service.name=oauth2-refresh-token-service
-        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=prometheus -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
+        - JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar -Dotel.metrics.exporter=none -Dotel.logs.exporter=none -Dotel.traces.exporter=jaeger -Dotel.exporter.jaeger.endpoint=http://jaeger-container:14250
       networks:
         - localnet
       depends_on:
