@@ -77,7 +77,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             userupdate = replace(user, userId=user.userId)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
@@ -101,7 +101,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             userupdate = replace(user, email=user.email)
 
             with self.client.post("/oauth2/user", json=userupdate.to_dict(),
@@ -170,7 +170,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.pop()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             user2 = replace(user, userId=user.userId)
             with self.client.put("/oauth2/user", data=user2.to_dict(),
                                  verify=False,
@@ -195,7 +195,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             userupdate = replace(user, userId=str(uuid4()))
 
             with self.client.put("/oauth2/user", json=userupdate.to_dict(),
@@ -221,7 +221,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             with self.client.get(f"/oauth2/user/{user.userId}",
                                 verify=False,
                                 allow_redirects=False,
@@ -296,7 +296,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.pop()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
 
             with self.client.delete(f"/oauth2/user/{user.userId}",
                                     verify=False,
@@ -339,7 +339,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             passwd = user.new_password()
             with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
                                   verify=False,
@@ -362,7 +362,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             passwd = user.new_password()
             passwd['password'] = str(uuid4())
             with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,
@@ -388,7 +388,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             passwd = user.new_password()
             with self.client.post(f"/oauth2/password/none", json=passwd,
                                   verify=False,
@@ -411,7 +411,7 @@ class UserRegistration(HttpUser):
             try:
                 user = USERS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             passwd = user.new_password()
             passwd['newPasswordConfirm'] = str(uuid4())
             with self.client.post(f"/oauth2/password/{user.userId}", json=passwd,

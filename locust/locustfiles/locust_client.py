@@ -44,21 +44,6 @@ class ClientRegistration(HttpUser):
     fixed_count = 1
     host = "https://localhost:6884"
 
-    def on_start(self):
-        c = Client(clientId="none", clientSecret="none")
-        with self.client.post("/oauth2/client", data=c.to_dict(),
-                              verify=False, allow_redirects=False,
-                              catch_response=True) as r:
-            if r.status_code == 200:
-                t = r.json()
-                c.clientId = t['clientId']
-                c.clientSecret = t['clientSecret']
-                logging.info(f"Registered client: {c!r}")
-                CLIENTS.add(c)
-                r.success()
-            else:
-                raise RuntimeError(f"First attempt to register Client failed, status code was {r.status_code}")
-
     @task(1)
     class RegisterClient(TaskSet):
 
@@ -91,7 +76,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, clientType="none")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
                                   verify=False,
@@ -115,7 +100,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, clientProfile="none")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
                                   verify=False,
@@ -139,7 +124,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, ownerId="nouser")
             with self.client.post("/oauth2/client", data=c2.to_dict(),
                                   verify=False,
@@ -165,7 +150,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.pop()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, clientName=str(uuid4())[:32])
 
             with self.client.put("/oauth2/client", json=c2.to_dict(),
@@ -192,7 +177,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, clientType="none")
             with self.client.put("/oauth2/client", json=c2.to_dict(),
                                  verify=False,
@@ -217,7 +202,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, clientProfile="none")
             with self.client.put("/oauth2/client", json=c2.to_dict(),
                                  verify=False,
@@ -242,7 +227,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, ownerId="nouser")
             with self.client.put("/oauth2/client", json=c2.to_dict(),
                                  verify=False,
@@ -267,7 +252,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             c2 = replace(c, clientId="", clientName=str(uuid4())[:32])
 
             with self.client.put("/oauth2/client", json=c2.to_dict(),
@@ -293,7 +278,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.pop()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             with self.client.delete(f"/oauth2/client/{c.clientId}",
                                     verify=False,
                                     allow_redirects=False,
@@ -335,7 +320,7 @@ class ClientRegistration(HttpUser):
             try:
                 c = CLIENTS.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             with self.client.get(f"/oauth2/client/{c.clientId}",
                                  verify=False,
                                  allow_redirects=False,

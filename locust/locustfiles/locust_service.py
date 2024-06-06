@@ -37,19 +37,6 @@ class ServiceRegistration(HttpUser):
     fixed_count = 1
     host = "https://localhost:6883"
 
-    def on_start(self):
-        service = Service()
-        with self.client.post("/oauth2/service", data=service.to_dict(),
-                              verify=False, allow_redirects=False,
-                              catch_response=True) as r:
-
-            if r.status_code == 200:
-                logging.info(f"Registered service: {service!r}")
-                SERVICES.add(service)
-                r.success()
-            else:
-                raise RuntimeError(f"First attempt to register Service failed, return code was {r.status_code}")
-
     @task(1)
     class RegisterService(TaskSet):
 
@@ -80,7 +67,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             with self.client.post("/oauth2/service", data=service.to_dict(),
                                   verify=False,
                                   allow_redirects=False,
@@ -143,7 +130,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.pop()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             service2 = replace(service, serviceId=service.serviceId, serviceType="swagger")
 
             with self.client.put("/oauth2/service", json=service2.to_dict(),
@@ -170,7 +157,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             service2 = replace(service, serviceId=service.serviceId, serviceType="swagger",
                                ownerId="nouser")
 
@@ -194,7 +181,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             service2 = replace(service, serviceId="")
 
             with self.client.put("/oauth2/service", json=service2.to_dict(),
@@ -220,7 +207,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.pop()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             with self.client.delete(f"/oauth2/service/{service.serviceId}",
                                     verify=False,
                                     allow_redirects=False,
@@ -262,7 +249,7 @@ class ServiceRegistration(HttpUser):
             try:
                 service = SERVICES.choice()
             except KeyError:
-                self.interrupt()
+                self.interrupt(reschedule=True)
             with self.client.get(f"/oauth2/service/{service.serviceId}",
                                  verify=False,
                                  allow_redirects=False,
