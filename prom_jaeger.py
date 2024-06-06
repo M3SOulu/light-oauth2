@@ -137,12 +137,7 @@ if __name__ == "__main__":
     # Define the path for storing the last fetch time
     last_fetch_time_file = os.path.join(output_directory, "last_fetch_time.txt")
     
-    prometheus_url = sys.argv[1]
-    output_directory = sys.argv[2]
-    metric_names = [name.rstrip('\r') for name in sys.argv[3:]]  # Strip carriage returns
-
-    # Current run's end time is now
-    end_time = datetime.now(timezone.utc)
+    metric_names = [name.rstrip('\r') for name in metric_names]  # Strip carriage returns
 
     # Your existing data fetching and processing logic...
     for metric_name in metric_names:
