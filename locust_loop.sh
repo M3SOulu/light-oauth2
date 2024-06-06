@@ -51,8 +51,10 @@ for tag in "${error_tags[@]}"; do
     # Wait for Locust to finish
     wait
 
+    end_time=$(date +%s)
+
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
-    python $python_script $prometheus_url "$tag_output_directory" "$start_time" "${metric_names[@]}"
+    python $python_script $prometheus_url "$tag_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
 
     #Move locust log
     mv locust/locust.log $tag_output_directory

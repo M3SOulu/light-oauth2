@@ -127,7 +127,8 @@ if __name__ == "__main__":
     prometheus_url = sys.argv[1]
     output_directory = sys.argv[2]
     start_time = datetime.fromtimestamp(int(sys.argv[3]), tz=timezone.utc)
-    metric_names = sys.argv[4:]  # Remaining arguments are metrics
+    end_time = datetime.fromtimestamp(int(sys.argv[4]), tz=timezone.utc)
+    metric_names = sys.argv[5:]  # Remaining arguments are metrics
 
     # Hardcoded Jaeger services
     jaeger_services = ['oauth2-code-service','oauth2-service-service', 'oauth2-token-service', 'jaeger-all-in-one', 'oauth2-user-service', 'oauth2-client-service', 'oauth2-refresh-token-service', 'oauth2-key-service']
