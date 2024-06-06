@@ -20,10 +20,10 @@ class Client:
     clientSecret: str = field(repr=False, hash=False)
     clientName: str = field(default_factory=lambda: str(uuid4())[:32], repr=False, hash=False)
     clientDesc: str = field(default_factory=lambda: str(uuid4()), repr=False, hash=False)
-    clientProfile: str = field(default="mobile", repr=True, hash=False) # TODO put different if important?
-    clientType: str = field(default="public", repr=True, hash=False) # TODO implement different types for different auth flows
-    scope: str = field(default="read write", repr=True, hash=False) # TODO implement different scopes
-    ownerId: str = field(default="admin", repr=True, hash=False) # TODO implement different users
+    clientProfile: str = field(default="mobile", repr=True, hash=False)
+    clientType: str = field(default="public", repr=True, hash=False)
+    scope: str = field(default="read write", repr=True, hash=False)
+    ownerId: str = field(default="admin", repr=True, hash=False)
     host: str = field(default="lightapi.net", repr=False, hash=False)
     redirectUri: str = field(default="http://localhost:8000/authorization", repr=False, hash=False)
     endpoints: list[str] = field(default_factory=list, repr=False, hash=False)

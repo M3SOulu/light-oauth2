@@ -485,7 +485,6 @@ class AuthorizationCodeFlow(OAuthUser):
                                f"error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
-                    # TODO reschedule to approriate task
             self.interrupt()
 
     @task(1)
@@ -570,7 +569,6 @@ class AuthorizationCodeFlowPKCE(OAuthUser):
                         f"error {r.json()}")
                     logging.warning(failstr)
                     r.failure(failstr)
-                    # TODO reschedule to appropriate task
             self.interrupt()
 
         # PKCE-specific errors
