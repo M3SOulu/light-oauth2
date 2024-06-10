@@ -39,6 +39,8 @@ for tag in "${error_tags[@]}"; do
     mkdir -p "$tag_output_directory"
     mkdir -p "$metric_output_directory"
 
+    echo "Starting locust test for tag '$tag'"
+
     # Record the start time
     start_time=$(date +%s)
 
@@ -53,6 +55,8 @@ for tag in "${error_tags[@]}"; do
     wait
 
     end_time=$(date +%s)
+
+    echo "Finished locust test for tag '$tag'"
 
     # Iterate over each container and move the logs
     for container_id in $(docker ps --format '{{.Names}}'); do
