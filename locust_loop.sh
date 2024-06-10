@@ -2,7 +2,7 @@
 
 # Configuration
 prometheus_url="http://localhost:9090"
-output_directory="csv_output"
+output_directory="light-oauth2-data"
 python_script="prom_jaeger.py"
 metrics_file="prometheus_metrics.txt"
 locust_command="locust --config locust/locust.conf"
@@ -35,7 +35,9 @@ deploy
 for tag in "${error_tags[@]}"; do
     # Set up directories and files for this tag
     tag_output_directory="${output_directory}/${tag}"
+    metric_output_directory="${tag_output_directory}/metrics"
     mkdir -p "$tag_output_directory"
+    mkdir -p "$metric_output_directory"
     cp "$metrics_file" "$tag_output_directory/$metrics_file"  # Copy metrics file to tag directory
 
     # Record the start time
@@ -60,7 +62,7 @@ for tag in "${error_tags[@]}"; do
     echo "Fetched docker logs from ${start_time} to ${end_time}"
 
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
-    python $python_script $prometheus_url "$tag_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
+    python $python_script $prometheus_url "$metric_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
 
     #Move locust log
     mv locust/locust.log $tag_output_directory
