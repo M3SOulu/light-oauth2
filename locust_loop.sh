@@ -55,7 +55,7 @@ for tag in "${error_tags[@]}"; do
 
     # Iterate over each container and move the logs
     for container_id in $(docker ps --format '{{.Names}}'); do
-        docker logs $container_id --since "$start_time" --until "$end_time" > "$tag_output_directory/${container_id}_docker.log" 2>&1
+        docker logs $container_id --since "$start_time" --until "$end_time" > "$tag_output_directory/${container_id}.log" 2>&1
     done
     echo "Fetched docker logs from ${start_time} to ${end_time}"
 
