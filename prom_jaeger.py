@@ -1,5 +1,6 @@
 import requests
 import csv
+import json
 import sys
 from datetime import datetime, timedelta, timezone
 from dateutil import parser
@@ -58,14 +59,12 @@ def fetch_metrics_data(url, metric_name, start_time, end_time):
         return []
 
 
-def write_metrics_to_csv(output_directory, metric_name, metrics_data):
-    file_name = f"metric_{metric_name.replace('/', '_')}.csv"
+def write_metrics_to_json(output_directory, metric_name, metrics_data):
+    file_name = f"metric_{metric_name.replace('/', '_')}.json"
     file_path = f"{output_directory}/{file_name}"
-    with open(file_path, 'a', newline='') as file:
-        writer = csv.writer(file)
-        for result in metrics_data:
-            for value in result['values']:
-                writer.writerow([metric_name, value[0], value[1]])
+    # Write the dictionary to a JSON file
+    with open(file_path, 'w') as json_file:
+        json.dump(metrics_data, json_file, indent=4)  # `indent=4` makes the file human-readable
 
 
 def fetch_and_save_jaeger_traces(jaeger_url, output_directory, services):
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     for metric_name in metric_names:
         metrics_data = fetch_metrics_data(prometheus_url, metric_name, start_time.isoformat(), end_time.isoformat())
         if metrics_data:
-            write_metrics_to_csv(output_directory, metric_name, metrics_data)
+            write_metrics_to_json(output_directory, metric_name, metrics_data)
     
     fetch_and_save_jaeger_traces(jaeger_url, output_directory, jaeger_services)
 
