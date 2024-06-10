@@ -58,6 +58,10 @@ for tag in "${error_tags[@]}"; do
 
     echo "Finished locust test for tag '$tag'"
 
+    #Move locust log
+    mv locust/locust.log $tag_output_directory
+    echo "Moved locust logs for tag '$tag'"
+
     # Iterate over each container and move the logs
     for container_id in $(docker ps --format '{{.Names}}'); do
         docker logs $container_id --since "$start_time" --until "$end_time" > "$tag_output_directory/${container_id}.log" 2>&1
@@ -67,8 +71,6 @@ for tag in "${error_tags[@]}"; do
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
     python $python_script $prometheus_url "$metric_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
 
-    #Move locust log
-    mv locust/locust.log $tag_output_directory
 done
   # Stop the system
   docker compose -f docker-compose-oauth2-mysql.yml down -v
