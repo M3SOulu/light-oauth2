@@ -38,7 +38,6 @@ for tag in "${error_tags[@]}"; do
     metric_output_directory="${tag_output_directory}/metrics"
     mkdir -p "$tag_output_directory"
     mkdir -p "$metric_output_directory"
-    cp "$metrics_file" "$tag_output_directory/$metrics_file"  # Copy metrics file to tag directory
 
     # Record the start time
     start_time=$(date +%s)
