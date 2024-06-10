@@ -55,7 +55,7 @@ for tag in "${error_tags[@]}"; do
 
     # Iterate over each container and move the logs
     for container_id in $(docker ps -q); do
-        docker logs $container_id --since "$start_time" --until ""$end_time"" > "$tag_output_directory/${container_id}_docker.log"
+        docker logs $container_id --since "$start_time" --until "$end_time" > "$tag_output_directory/${container_id}_docker.log" 2>&1
     done
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
     python $python_script $prometheus_url "$tag_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
