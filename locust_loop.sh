@@ -2,6 +2,7 @@
 
 # Configuration
 prometheus_url="http://localhost:9090"
+jaeger_url="http://localhost:16686"
 output_directory="light-oauth2-data"
 python_script="prom_jaeger.py"
 metrics_file="prometheus_metrics.txt"
@@ -69,7 +70,7 @@ for tag in "${error_tags[@]}"; do
     echo "Fetched docker logs from ${start_time} to ${end_time}"
 
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
-    python $python_script $prometheus_url "$metric_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
+    python $python_script $prometheus_url $jaeger_url "$metric_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
 
 done
   # Stop the system
