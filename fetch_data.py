@@ -1,9 +1,10 @@
-import requests
+import sys
+import os
 import csv
 import json
-import sys
 from datetime import datetime, timezone
-import os
+
+import requests
 
 # Hardcoded Jaeger services
 JAEGER_SERVICES = ['oauth2-code-service', 'oauth2-service-service', 'oauth2-token-service', 'jaeger-all-in-one',
@@ -116,4 +117,4 @@ if __name__ == "__main__":
     # Save the end time of this fetch
     save_last_fetch_time(output_directory, end_time)
 
-    print("Fetched metrics and traces from ", str(start_time.isoformat()), " to ", str(end_time.isoformat()))
+    print(f"Fetched metrics and traces from {start_time.isoformat()} to {end_time.isoformat()}")
