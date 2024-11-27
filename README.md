@@ -23,7 +23,7 @@ This repository contains the following files:
 - Scripts
   - [prometheus_metrics.sh](prometheus_metrics.sh) Script used to query all available Prometheus metrics
   - [fetch_data.py](fetch_data.py) Script to fetch data of Prometheus and Jaeger agents
-  - [locust_loop.sh](locust_loop.sh) Main script that deploys the system, runs Locust tests and collects all data
+  - [data_run.sh](data_run.sh) Main script that deploys the system, runs Locust tests and collects all data
 
 # Setup 
 To replicate the data collection process, set up the following things:
