@@ -49,6 +49,21 @@ It is possible to use the [prometheus_metrics.sh](prometheus_metrics.sh) script 
 - If you need only a subset of metrics, edit the file accordingly
 
 # Making a data run
-```
-docker compose -f docker-compose-oauth2-mysql.yml up
-```
+
+To perform a single data run, i.e. deploy the system and execute all the locust test, run the [data_run.sh](data_run.sh) script.
+
+The script performs the following:
+- Get the list of all tagged error tasks from [locust](locust) files
+- Get the list of all Prometheus metrics from [prometheus_metrics.txt](prometheus_metrics.txt)
+- Deploy all the containers using `docker compose -f docker-compose-oauth2-mysql.yml up --force-recreate -d`
+- Wait for the MySQL database to be ready and read the configuration for `light-oauth2`
+- Run only the `correct` tests for 1 min and fetch all logs, metrics, traces
+- For each error case, run `correct` + error tests for 10s and fetch all logs, metrics, traces
+- The data is saved as follows:
+  - `light-oauth2-data`: root folder of data
+    - `correct`/`ERROR`: data for the correct or correct+ERROR test execution
+      - `*.log` files: log files for each container and Locust
+      - `metrics`: folder containing all data from Prometheus and Jaeger
+        - `metric_*.json`: a JSON file for each Promethus metric from [prometheus_metrics.txt](prometheus_metrics.txt) with metric values
+        - `traces_*.csv`: a CSV file for each container with Jaeger traces
+        - `last_fetch_time.txt`: timestamp of the end of the interval the data was fetched for
