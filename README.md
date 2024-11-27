@@ -33,6 +33,7 @@ To replicate the data collection process, set up the following things:
 - Clone this repository
 - Install MySQL (`mysqladmin` command should be available)
 - Install Locust (`locust` command should be available)
+- Install the `requests` python library
 - Install Docker (`docker` and `docker compose` commands should be available)
 
 ## Prometheus metrics
