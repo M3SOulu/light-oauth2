@@ -4,7 +4,7 @@
 prometheus_url="http://localhost:9090"
 jaeger_url="http://localhost:16686"
 output_directory="light-oauth2-data"
-python_script="prom_jaeger.py"
+python_script="fetch_data.py"
 metrics_file="prometheus_metrics.txt"
 locust_command="locust --config locust/locust.conf"
 
