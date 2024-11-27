@@ -3,46 +3,26 @@ import csv
 import json
 import sys
 from datetime import datetime, timedelta, timezone
-from dateutil import parser
 import os
 
-def save_last_fetch_time(file_path, end_time):
+# Hardcoded Jaeger services
+JAEGER_SERVICES = ['oauth2-code-service', 'oauth2-service-service', 'oauth2-token-service', 'jaeger-all-in-one',
+                   'oauth2-user-service', 'oauth2-client-service', 'oauth2-refresh-token-service', 'oauth2-key-service']
+
+
+def save_last_fetch_time(output_directory: str, end_time: datetime):
     """Saves the last fetch end time to a file."""
+    # Define the path for storing the last fetch time
+    file_path = os.path.join(output_directory, "last_fetch_time.txt")
     with open(file_path, 'w') as f:
         f.write(end_time.isoformat())
 
-def load_last_fetch_time(file_path):
-    """Loads the last fetch end time from a file. Returns a datetime object or None."""
-    try:
-        with open(file_path, 'r') as f:
-            return datetime.fromisoformat(f.read())
-    except FileNotFoundError:
-        return None
-    except ValueError as e:
-        print(f"Error parsing datetime from file '{file_path}': {e}")
-        return None
 
-def ensure_datetime(time_value):
-    """Ensure the time_value is a datetime object."""
-    if isinstance(time_value, datetime):
-        return time_value
-    elif isinstance(time_value, str):
-        # Attempt to parse the string to datetime
-        try:
-            return parser.parse(time_value)
-        except ValueError as e:
-            print(f"Error parsing datetime from string '{time_value}': {e}")
-            return None  # or handle as appropriate for your use case
-    else:
-        print(f"Unexpected type for time_value: {type(time_value)}")
-        return None  # or handle as appropriate for your use case
-
-
-def fetch_metrics_data(url, metric_name, start_time, end_time):
+def fetch_metrics_data(url: str, metric_name: str, start_time: datetime, end_time: datetime):
     params = {
         'query': metric_name,
-        'start': start_time,
-        'end': end_time,
+        'start': start_time.isoformat(),
+        'end': end_time.isoformat(),
         'step': '5s'  # Defines the interval between two points in seconds
     }
     response = requests.get(f'{url}/api/v1/query_range', params=params)
@@ -59,7 +39,7 @@ def fetch_metrics_data(url, metric_name, start_time, end_time):
         return []
 
 
-def write_metrics_to_json(output_directory, metric_name, metrics_data):
+def save_metrics_data(output_directory, metric_name, metrics_data):
     file_name = f"metric_{metric_name.replace('/', '_')}.json"
     file_path = f"{output_directory}/{file_name}"
     # Write the dictionary to a JSON file
@@ -97,28 +77,20 @@ def fetch_and_save_jaeger_traces(jaeger_url, output_directory, services):
             print(f"Failed to save traces for {service_name}")
 
 
-def fetch_jaeger_traces(jaeger_url, service_name, start_time, end_time):
-    start_time = ensure_datetime(start_time)
-    end_time = ensure_datetime(end_time)
-    
-    # Proceed only if both start_time and end_time are successfully ensured as datetime objects
-    if start_time and end_time:
-        start_time_micro = int(start_time.timestamp() * 1e6)
-        end_time_micro = int(end_time.timestamp() * 1e6)
-        params = {
-            'service': service_name,
-            'start': start_time_micro,
-            'end': end_time_micro,
-            'limit': 20,
-        }
-        response = requests.get(f"{jaeger_url}/api/traces", params=params)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(f"Failed to fetch Jaeger traces for service '{service_name}': HTTP {response.status_code}")
-            return {}
+def fetch_jaeger_traces(jaeger_url: str, service_name: str, start_time: datetime, end_time: datetime):
+    start_time_micro = int(start_time.timestamp() * 1e6)
+    end_time_micro = int(end_time.timestamp() * 1e6)
+    params = {
+        'service': service_name,
+        'start': start_time_micro,
+        'end': end_time_micro,
+        'limit': 20,
+    }
+    response = requests.get(f"{jaeger_url}/api/traces", params=params)
+    if response.status_code == 200:
+        return response.json()
     else:
-        # Handle the case where start_time or end_time couldn't be ensured as datetime objects
+        print(f"Failed to fetch Jaeger traces for service '{service_name}': HTTP {response.status_code}")
         return {}
 
 
@@ -129,24 +101,18 @@ if __name__ == "__main__":
     start_time = datetime.fromtimestamp(int(sys.argv[4]), tz=timezone.utc)
     end_time = datetime.fromtimestamp(int(sys.argv[5]), tz=timezone.utc)
     metric_names = sys.argv[6:]  # Remaining arguments are metrics
-
-    # Hardcoded Jaeger services
-    jaeger_services = ['oauth2-code-service','oauth2-service-service', 'oauth2-token-service', 'jaeger-all-in-one', 'oauth2-user-service', 'oauth2-client-service', 'oauth2-refresh-token-service', 'oauth2-key-service']
-
-    # Define the path for storing the last fetch time
-    last_fetch_time_file = os.path.join(output_directory, "last_fetch_time.txt")
-    
     metric_names = [name.rstrip('\r') for name in metric_names]  # Strip carriage returns
 
-    # Your existing data fetching and processing logic...
+    # Fetch and save Prometheus metrics
     for metric_name in metric_names:
-        metrics_data = fetch_metrics_data(prometheus_url, metric_name, start_time.isoformat(), end_time.isoformat())
+        metrics_data = fetch_metrics_data(prometheus_url, metric_name, start_time, end_time)
         if metrics_data:
-            write_metrics_to_json(output_directory, metric_name, metrics_data)
-    
-    fetch_and_save_jaeger_traces(jaeger_url, output_directory, jaeger_services)
+            save_metrics_data(output_directory, metric_name, metrics_data)
 
-    # Save the end time of this fetch for the next run
-    save_last_fetch_time(last_fetch_time_file, end_time)
+    # Fetch and save Jaeger traces
+    fetch_and_save_jaeger_traces(jaeger_url, output_directory, JAEGER_SERVICES)
+
+    # Save the end time of this fetch
+    save_last_fetch_time(output_directory, end_time)
 
     print("Fetched metrics and traces from ", str(start_time.isoformat()), " to ", str(end_time.isoformat()))
