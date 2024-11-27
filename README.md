@@ -20,6 +20,7 @@ This repository contains the following files:
   We use the MySQL database for deployment while `light-oauth2` supports other options. See original repo for other deployment files;
 - [prometheus.yml](prometheus.yml) Configuration of Prometheus used in deployment
 - [prometheus_metrics.txt](prometheus_metrics.txt) List of available and queried Prometheus metrics
+- [opentelemetry-javaagent.jar](opentelemetry-javaagent.jar) Java agent for Jaeger that we attempt to inject into each container for tracing collection
 - Scripts
   - [prometheus_metrics.sh](prometheus_metrics.sh) Script used to query all available Prometheus metrics
   - [fetch_data.py](fetch_data.py) Script to fetch data of Prometheus and Jaeger agents
