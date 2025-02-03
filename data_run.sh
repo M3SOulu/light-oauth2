@@ -43,7 +43,7 @@ for tag in "${shuffled_tags[@]}"; do
     metric_output_directory="${tag_output_directory}/metrics"
     mkdir -p "$tag_output_directory"
     mkdir -p "$metric_output_directory"
-    duration = $(( RANDOM % (MAX_DUR - MIN_DUR + 1) + MIN_DUR ))
+    duration=$(( RANDOM % (MAX_DUR - MIN_DUR + 1) + MIN_DUR ))
 
     echo "Starting locust test for tag '$tag' with duration '$duration's"
 
@@ -77,7 +77,7 @@ for tag in "${shuffled_tags[@]}"; do
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
     python $python_script $prometheus_url $jaeger_url "$metric_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
 
-    wait_time = $(( RANDOM % (MAX_WAIT - MIN_WAIT + 1) + MIN_WAIT ))
+    wait_time=$(( RANDOM % (MAX_WAIT - MIN_WAIT + 1) + MIN_WAIT ))
 
     echo "Waiting for ${wait_time}s"
 
