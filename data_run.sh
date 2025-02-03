@@ -6,7 +6,6 @@ jaeger_url="http://localhost:16686"
 output_directory="light-oauth2-data"
 python_script="fetch_data.py"
 metrics_file="prometheus_metrics.txt"
-locust_command="locust --config locust/locust.conf"
 
 # List of error_tags for different test scenarios
 error_tags=("correct")
@@ -48,9 +47,9 @@ for tag in "${shuffled_tags[@]}"; do
 
     # Start the Locust test for this tag
     if [ "$tag" == "correct" ]; then
-      $locust_command --tags correct  > /dev/null 2>&1 &
+      locust --config locust/locust.conf --tags correct  > /dev/null 2>&1 &
     else
-      $locust_command --tags correct $tag > /dev/null 2>&1 &
+      locust --config locust/locust.conf --tags correct $tag > /dev/null 2>&1 &
     fi
 
     # Wait for Locust to finish
