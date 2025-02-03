@@ -47,7 +47,7 @@ for tag in "${error_tags[@]}"; do
 
     # Start the Locust test for this tag
     if [ "$tag" == "correct" ]; then
-      $locust_command --tags correct --run-time 1m > /dev/null 2>&1 &
+      $locust_command --tags correct  > /dev/null 2>&1 &
     else
       $locust_command --tags correct $tag > /dev/null 2>&1 &
     fi
