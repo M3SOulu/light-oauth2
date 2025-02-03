@@ -8,6 +8,8 @@ python_script="fetch_data.py"
 metrics_file="prometheus_metrics.txt"
 MIN_DUR=20
 MAX_DUR=180
+MIN_WAIT=1
+MAX_WAIT=5
 
 # List of error_tags for different test scenarios
 error_tags=("correct")
@@ -75,6 +77,11 @@ for tag in "${shuffled_tags[@]}"; do
     # Fetch Prometheus metrics and Jaeger traces from start time to current time
     python $python_script $prometheus_url $jaeger_url "$metric_output_directory" "$start_time" "$end_time" "${metric_names[@]}"
 
+    wait_time = $(( RANDOM % (MAX_WAIT - MIN_WAIT + 1) + MIN_WAIT ))
+
+    echo "Waiting for ${wait_time}s"
+
+    sleep ${wait_time}
 done
   # Stop the system
   docker compose -f docker-compose-oauth2-mysql.yml down -v
