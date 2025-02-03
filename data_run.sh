@@ -6,6 +6,8 @@ jaeger_url="http://localhost:16686"
 output_directory="light-oauth2-data"
 python_script="fetch_data.py"
 metrics_file="prometheus_metrics.txt"
+MIN_DUR=20
+MAX_DUR=180
 
 # List of error_tags for different test scenarios
 error_tags=("correct")
@@ -39,17 +41,18 @@ for tag in "${shuffled_tags[@]}"; do
     metric_output_directory="${tag_output_directory}/metrics"
     mkdir -p "$tag_output_directory"
     mkdir -p "$metric_output_directory"
+    duration = $(( RANDOM % (MAX_DUR - MIN_DUR + 1) + MIN_DUR ))
 
-    echo "Starting locust test for tag '$tag'"
+    echo "Starting locust test for tag '$tag' with duration '$duration's"
 
     # Record the start time
     start_time=$(date +%s)
 
     # Start the Locust test for this tag
     if [ "$tag" == "correct" ]; then
-      locust --config locust/locust.conf --tags correct  > /dev/null 2>&1 &
+      locust --config locust/locust.conf --tags correct --run-time "${duration}s" > /dev/null 2>&1 &
     else
-      locust --config locust/locust.conf --tags correct $tag > /dev/null 2>&1 &
+      locust --config locust/locust.conf --tags correct $tag --run-time "${duration}s" > /dev/null 2>&1 &
     fi
 
     # Wait for Locust to finish
