@@ -11,6 +11,7 @@ locust_command="locust --config locust/locust.conf"
 # List of error_tags for different test scenarios
 error_tags=("correct")
 error_tags+=($(grep -oP "@tag\('error'.*'\K[^']*(?='\))" -r locust/locustfiles/ -h))
+shuffled_tags=($(shuf -e "${error_tags[@]}"))
 
 # Ensure the main output directory exists
 mkdir -p "$output_directory"
@@ -33,7 +34,7 @@ deploy()
 
 deploy
 # Loop through each tag and perform tests
-for tag in "${error_tags[@]}"; do
+for tag in "${shuffled_tags[@]}"; do
     # Set up directories and files for this tag
     tag_output_directory="${output_directory}/${tag}"
     metric_output_directory="${tag_output_directory}/metrics"
