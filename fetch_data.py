@@ -24,7 +24,7 @@ def fetch_metrics_data(url: str, metric_name: str, start_time: datetime, end_tim
         'query': metric_name,
         'start': start_time.isoformat(),
         'end': end_time.isoformat(),
-        'step': '5s'  # Defines the interval between two points in seconds
+        'step': '1s'  # Defines the interval between two points in seconds
     }
     response = requests.get(f'{url}/api/v1/query_range', params=params)
     
