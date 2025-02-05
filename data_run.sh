@@ -55,9 +55,9 @@ for tag in "${shuffled_tags[@]}"; do
 
     # Start the Locust test for this tag
     if [ "$tag" == "correct" ]; then
-      locust --config locust/locust.conf --tags correct --run-time "${duration}s" > /dev/null 2>&1 &
+      locust --config locust/locust.conf --tags correct --run-time "${duration}s" --logfile $tag_output_directory/locust.log > /dev/null 2>&1 &
     else
-      locust --config locust/locust.conf --tags correct $tag --run-time "${duration}s" > /dev/null 2>&1 &
+      locust --config locust/locust.conf --tags correct $tag --run-time "${duration}s" --logfile $tag_output_directory/locust.log > /dev/null 2>&1 &
     fi
 
     # Wait for Locust to finish
@@ -66,10 +66,6 @@ for tag in "${shuffled_tags[@]}"; do
     end_time=$(date +%s)
 
     echo "$(date +%s) Finished locust test for tag '$tag'" | tee -a ${output_directory}/${run_log}
-
-    #Move locust log
-    mv locust/locust.log $tag_output_directory
-    echo "$(date +%s) Moved locust logs for tag '$tag'" | tee -a ${output_directory}/${run_log}
 
     # Iterate over each container and move the logs
     for container_id in $(docker ps --format '{{.Names}}'); do
